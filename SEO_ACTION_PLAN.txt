@@ -1,0 +1,44 @@
+================================================================
+SIALSOURCING — OFF-SITE SEO ACTION PLAN (owner tasks)
+The on-page work is done. These items need your accounts/identity
+and are the rate-limiter for ranking. Do them in this order.
+================================================================
+
+WEEK 1 — FOUNDATIONS (2-3 hours total)
+1. Google Business Profile for the DALLAS office (business.google.com)
+   - Category: "Importer" / "Exporter"; add photos, hours (CST), phone.
+   - This puts you on Google Maps for US searches — none of your
+     Sialkot competitors can have a US profile. Ask every happy
+     client for a Google review here (aim: 5-10 real reviews).
+2. LinkedIn Company Page (link team members' profiles to it).
+3. Google Search Console: submit sitemap.xml (per deployment guide),
+   then check "Performance" monthly — double down on queries that
+   are climbing (positions 5-20 are the money zone).
+4. Add the new profile URLs to the "sameAs" list in
+   includes/header.php (ask your developer / next Claude session).
+
+WEEK 2-4 — CITATIONS & DIRECTORIES (verifiable listings only)
+5. Sialkot Chamber of Commerce & Industry — membership + web listing.
+6. D-U-N-S number (free via Dun & Bradstreet) — US procurement
+   teams check it; add it to the company profile PDF when issued.
+7. B2B directories worth the time: Kompass, Europages, TradeKey,
+   Alibaba company profile (even without selling there, it ranks).
+   Keep NAP (name-address-phone) identical everywhere.
+
+MONTHLY — CONTENT & LINKS
+8. Publish 2-4 blog posts/month from the cluster lists (soccer,
+   surgical, uniforms, US-import). Consistency beats bursts.
+9. One "linkable asset" per quarter: e.g. "Sialkot exports by the
+   numbers" data page — pitch it to trade publications and
+   sourcing newsletters for backlinks.
+10. Answer journalist/newsletter requests (Qwoted, Featured,
+    HARO-style platforms) as "a Sialkot sourcing expert" — each
+    published quote is a quality backlink.
+
+WHAT TO EXPECT
+- Weeks 2-6: new pages indexed, long-tail queries start appearing.
+- Months 2-4: mid-tail terms ("dental instruments Sialkot",
+  "promotional soccer balls bulk") reach page 1-2 with links.
+- Months 4-8+: head terms move as authority builds. Track it all
+  in Search Console; never buy links from SEO spammers.
+================================================================

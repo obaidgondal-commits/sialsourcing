@@ -1,0 +1,198 @@
+================================================================
+SIALSOURCING — DEPLOYMENT GUIDE
+Updated: July 2026 (site modernization release)
+================================================================
+
+This guide covers TWO things:
+  A) Deploying the JULY 2026 UPDATE to the live site
+  B) Reference: full fresh-install steps (kept from the original guide)
+
+================================================================
+A) DEPLOYING THE JULY 2026 UPDATE
+================================================================
+
+WHAT THIS UPDATE CONTAINS
+-----------------------------
+- Clean URLs (/about, /sports-goods, /blog/post-name) with 301
+  redirects from every old .php URL — search rankings transfer.
+- Two NEW category pages: /custom-soccer-balls and
+  /uniforms-tactical-wear (content ships in content-update.sql).
+- Six new blog posts (also in content-update.sql).
+- Security: CSRF protection on all forms, session hardening,
+  upload validation, config.php blocked from web access.
+- Contact form now EMAILS you each enquiry (also still saved in
+  the admin Inbox) + honeypot spam protection.
+- Design refresh: SVG icons (no emoji UI), branded placeholders,
+  floating WhatsApp button, US-buyer section, cached stylesheet.
+- Dynamic sitemap at /sitemap.xml (generated from the database).
+
+STEP 1 — BACKUP (5 minutes, do not skip)
+-----------------------------
+1. hPanel -> File Manager -> select all in public_html -> Compress
+   -> download the zip.
+2. hPanel -> phpMyAdmin -> select your database -> Export -> Go.
+Keep both files. This is your rollback.
+
+STEP 2 — RUN content-update.sql (before uploading files)
+-----------------------------
+1. hPanel -> phpMyAdmin -> select the sialsourcing database.
+2. SQL tab -> paste the ENTIRE contents of content-update.sql -> Go.
+3. It is safe to run twice (every insert checks for existing rows;
+   nothing existing is modified). Avoid editing Products/Blog in the
+   admin panel while running it.
+4. Verify: the two SELECTs at the bottom of the file should list
+   custom-soccer-balls and uniforms-tactical-wear among products,
+   and 6 new blog slugs.
+
+STEP 3 — UPLOAD THE FILES
+-----------------------------
+Upload ALL changed/new files into public_html, overwriting:
+  - Every .php file in the root (index, about, contact, blog,
+    blog-single, products, product-template, faq, team, solutions,
+    lab-qc, sitemap + NEW: 404.php, custom-soccer-balls.php,
+    uniforms-tactical-wear.php)
+  - includes/ (header.php, footer.php + NEW: icons.php)
+  - admin/ (all files)
+  - assets/css/style.css, assets/js/main.js
+  - config.php, robots.txt, llms.txt, content-update.sql
+  - .htaccess LAST (it activates the new URLs — uploading it last
+    means the site never references pages that aren't there yet)
+
+STEP 4 — DELETE ON THE SERVER
+-----------------------------
+  - default.php        (old Hostinger welcome page)
+  - sitemap.xml        (the STATIC file — /sitemap.xml is now
+                        served dynamically; if the file stays, it
+                        will shadow the dynamic one)
+  - uploads/blogs/     (empty legacy folder; keep uploads/blog/)
+  - content-update.sql (after you have run it in Step 2)
+
+STEP 5 — EMAIL NOTIFICATIONS
+-----------------------------
+The contact form now sends each enquiry to your contact_email
+(Settings) from no-reply@sialsourcing.com.
+1. hPanel -> Emails: create the mailbox no-reply@sialsourcing.com
+   (or any alias) so mail passes SPF/DKIM checks.
+2. Send a test enquiry from the live site; check inbox AND spam.
+3. If mail does not arrive, enquiries are STILL saved in the admin
+   Inbox — nothing is lost. For guaranteed delivery, ask your
+   developer to switch to SMTP (PHPMailer) with a Hostinger mailbox.
+
+STEP 6 — POST-DEPLOY CHECKS (10 minutes)
+-----------------------------
+Open these and confirm:
+  https://sialsourcing.com/            -> 200, homepage, 8 product tiles
+  https://sialsourcing.com/about.php   -> redirects to /about
+  https://sialsourcing.com/custom-soccer-balls    -> new page
+  https://sialsourcing.com/uniforms-tactical-wear -> new page
+  https://sialsourcing.com/blog        -> lists 12 posts
+  https://sialsourcing.com/blog/how-to-order-custom-soccer-balls-bulk
+  https://sialsourcing.com/sitemap.xml -> XML with clean URLs
+  https://sialsourcing.com/config.php  -> 403 Forbidden
+  https://sialsourcing.com/no-such-page -> branded 404
+  /admin/ -> login works, edit + save a product works
+  Contact form -> submit -> success message + Inbox row (+ email)
+
+If the site shows a 500 error after upload: edit .htaccess and
+delete the single line "Options -Indexes", then reload. (Some
+hosting configurations disallow that directive; everything else
+works without it.)
+
+STEP 6b — ROUND 2 ADDITIONS (July 2026)
+-----------------------------
+The July round-2 update adds: /resources (downloads), /for-manufacturers
+(application form + NEW admin section "Manufacturers"), /qc-inspection-request,
+4 sub-category pages (dental-instruments, promotional-soccer-balls,
+security-guard-uniforms, medical-scrubs — these use sort order 100+ so they
+do NOT appear in the homepage grid), 4 more blog posts, and assets/docs/*.pdf.
+- content-update.sql (re-run the whole file — still safe twice) now also
+  CREATES the manufacturer_applications table. Run it BEFORE uploading files.
+- Upload the new files: resources.php, for-manufacturers.php,
+  qc-inspection-request.php, the 4 sub-category .php wrappers,
+  admin/manufacturers.php, assets/docs/ folder, SEO_ACTION_PLAN.txt (keep
+  local only if you prefer), plus all modified files.
+- Post-deploy checks: /resources downloads work, /for-manufacturers form
+  submits (check admin -> Manufacturers), /dental-instruments renders with
+  a "Part of Surgical Instruments" link.
+- Then work through SEO_ACTION_PLAN.txt — it is the ranking rate-limiter.
+
+STEP 7 — GOOGLE (same day)
+-----------------------------
+1. Search Console -> Sitemaps -> submit: sitemap.xml
+2. URL Inspection -> inspect and "Request indexing" for:
+     /custom-soccer-balls
+     /uniforms-tactical-wear
+     two or three of the new blog URLs
+3. Over the next 2–4 weeks, Coverage will show old .php URLs as
+   "Page with redirect" — that is correct and expected.
+
+STEP 8 — RECOMMENDED CONTENT TASKS (admin panel, no developer)
+-----------------------------
+- Product Pages -> Custom Soccer Balls / Uniforms & Tactical Wear:
+  confirm the MOQ and lead-time values match what you can deliver,
+  and upload real product photos when available.
+- Blog: add featured images to the 6 new posts (Blog -> Edit).
+- Settings: confirm contact_email is the address that should
+  receive enquiry notifications.
+
+================================================================
+B) FRESH INSTALL REFERENCE (original guide, updated)
+================================================================
+
+STEP 1: DATABASE
+  hPanel -> MySQL Databases -> create DB -> phpMyAdmin -> Import
+  your database backup (or schema file).
+
+STEP 2: CONFIGURE
+  Edit config.php: DB_HOST, DB_NAME, DB_USER, DB_PASS, SITE_URL.
+
+STEP 3: UPLOAD
+  All project files into public_html (File Manager or FTP).
+
+STEP 4: PERMISSIONS
+  uploads/ and its subfolders (blog, products, team) -> 755.
+
+STEP 5: ADMIN
+  https://yourdomain/admin/ — sign in and change your password
+  immediately (Settings -> Change Password).
+
+STEP 6: SSL
+  hPanel -> SSL -> enable Let's Encrypt. The .htaccess in this
+  release already forces HTTPS + non-www once SSL is active.
+
+COMMON ISSUES
+  Blank page            -> config.php DB credentials wrong
+  500 error             -> remove "Options -Indexes" line in .htaccess
+  Images not uploading  -> uploads/ permissions 755
+  CSS looks stale       -> hard-refresh; the stylesheet is versioned
+                           automatically on each deploy
+  Clean URLs 404        -> .htaccess missing or not uploaded
+
+ADMIN PANEL QUICK REFERENCE
+  Dashboard     Overview + new enquiries
+  Products      The 7 category cards (title, description, icon, order)
+  Product Pages Full category page content (hero, details HTML,
+                specs, gallery, per-page FAQs)
+  Solutions     Services shown on /solutions
+  Lab & QC      Lab tests and QC process cards
+  Blog          Write and publish posts (Quill editor)
+  FAQs          Site-wide FAQ list (shows on / and /faq)
+  Team          Team member profiles (photo optional)
+  Inbox         Contact form enquiries (also emailed to you)
+  Settings      Site name, contact info, password change
+
+ADDING A NEW PRODUCT CATEGORY (developer, 2 minutes)
+  1. Admin -> Products -> New Product (this creates the DB row and
+     its slug, e.g. "pet-accessories").
+  2. Create a wrapper file pet-accessories.php in public_html:
+       <?php
+       $productSlug = 'pet-accessories';
+       require __DIR__ . '/product-template.php';
+  3. Done — /pet-accessories works automatically (no .htaccess
+     edit needed), it appears in the sitemap, footer, and homepage
+     grid, and is editable under Product Pages.
+
+================================================================
+SUPPORT
+  Hostinger 24/7 chat: hpanel.hostinger.com
+================================================================

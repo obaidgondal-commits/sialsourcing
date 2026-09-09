@@ -1,0 +1,113 @@
+# ============================================================
+# SialSourcing — routing, security, performance
+# Apache 2.4 / LiteSpeed (Hostinger) compatible
+# ============================================================
+Options -Indexes
+
+ErrorDocument 404 /404.php
+
+# ---- Protect sensitive files ----
+<Files "config.php">
+  Require all denied
+</Files>
+<FilesMatch "^(DEPLOYMENT_GUIDE\.txt|SEO_ACTION_PLAN\.txt|content-update\.sql)$">
+  Require all denied
+</FilesMatch>
+
+# ---- Security headers ----
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Strict-Transport-Security "max-age=31536000"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# 1) Canonical host: force HTTPS + strip www in one hop
+RewriteCond %{HTTPS} off [OR]
+RewriteCond %{HTTP_HOST} ^www\. [NC]
+RewriteRule ^(.*)$ https://sialsourcing.com/$1 [R=301,L]
+
+# 2) Drop trailing slashes (never for real directories like /admin/)
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.+)/$ /$1 [R=301,L]
+
+# 3) 301 legacy .php URLs -> clean URLs.
+#    THE_REQUEST holds only the ORIGINAL browser request line, never the
+#    result of an internal rewrite, so rule 6 below cannot re-trigger these.
+RewriteCond %{THE_REQUEST} \s/+index\.php[?\s] [NC]
+RewriteRule ^ / [R=301,L]
+
+RewriteCond %{THE_REQUEST} \s/+blog-single\.php\?slug=([^&\s]+) [NC]
+RewriteRule ^ /blog/%1 [R=301,L,QSD]
+
+RewriteCond %{THE_REQUEST} \s/+(about|contact|blog|faq|team|solutions|lab-qc|products|activewear-sports-uniforms|surgical-instruments|sports-goods|leather-goods|cutlery|custom-soccer-balls|uniforms-tactical-wear)\.php[?\s] [NC]
+RewriteRule ^ /%1 [R=301,L]
+
+# 4) 301 the /products/{slug} URLs the old sitemap advertised (they 404 today)
+RewriteRule ^products/([a-z0-9-]+)/?$ /$1 [R=301,L]
+
+# 5) Sitemap served dynamically from the database
+RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
+# 6) Internal rewrites — the URL bar stays clean
+#    Blog posts: /blog/{slug}
+RewriteRule ^blog/([a-zA-Z0-9-]+)$ blog-single.php?slug=$1 [L,QSA]
+
+#    Any top-level page whose .php file exists: /about, /sports-goods, ...
+#    A future category page works with NO .htaccess edit — the wrapper
+#    file's existence is the gate.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteCond $1 !^(config|index|product-template|blog-single|sitemap|default)$
+RewriteRule ^([a-z0-9-]+)$ $1.php [L]
+</IfModule>
+
+# ============================================================
+# Performance (unchanged from previous config)
+# ============================================================
+
+# Enable GZIP compression
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json application/xml
+</IfModule>
+
+# Browser caching
+<IfModule mod_expires.c>
+  ExpiresActive On
+
+  # Images — 1 year
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/gif "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType image/x-icon "access plus 1 year"
+
+  # CSS and JS — 1 year
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType text/javascript "access plus 1 year"
+
+  # Fonts — 1 year
+  ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType font/woff "access plus 1 year"
+  ExpiresByType application/font-woff "access plus 1 year"
+
+  # HTML — 1 hour
+  ExpiresByType text/html "access plus 1 hour"
+</IfModule>
+
+# Cache-Control headers
+<IfModule mod_headers.c>
+  <FilesMatch "\.(jpg|jpeg|png|webp|gif|svg|ico)$">
+    Header set Cache-Control "max-age=31536000, public"
+  </FilesMatch>
+  <FilesMatch "\.(css|js)$">
+    Header set Cache-Control "max-age=31536000, public, immutable"
+  </FilesMatch>
+</IfModule>

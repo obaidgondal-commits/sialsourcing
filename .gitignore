@@ -1,0 +1,5 @@
+config.php
+*.sql
+public_html
+error_log
+.env
