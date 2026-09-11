@@ -6,11 +6,11 @@ require_once __DIR__ . '/includes/auth.php';
 if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['set_status'])) {
     $status = in_array($_POST['status'] ?? '', ['new','screening','approved','rejected']) ? $_POST['status'] : 'new';
     db()->prepare("UPDATE manufacturer_applications SET status=? WHERE id=?")->execute([$status,(int)$_POST['id']]);
-    header('Location: manufacturers.php'); exit;
+    header('Location: manufacturers.php', true, 303); exit;
 }
 if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['delete'])) {
     db()->prepare("DELETE FROM manufacturer_applications WHERE id=?")->execute([(int)$_POST['id']]);
-    header('Location: manufacturers.php'); exit;
+    header('Location: manufacturers.php', true, 303); exit;
 }
 
 $view = isset($_GET['view']) ? (int)$_GET['view'] : 0;
@@ -21,6 +21,7 @@ if ($view) {
 }
 $apps = db()->query("SELECT * FROM manufacturer_applications ORDER BY submitted_at DESC")->fetchAll();
 $badge = fn($s) => ['new'=>'badge-green','screening'=>'badge-gold','approved'=>'badge-green','rejected'=>'badge-gray'][$s] ?? 'badge-gray';
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <?php if ($view && $app): ?>

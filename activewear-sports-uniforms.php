@@ -1,5 +1,5 @@
 <?php
 $productSlug = 'activewear-sports-uniforms';
-$pageTitle = 'Activewear Manufacturer Pakistan — Custom OEM Sports Uniforms, Low MOQ | SialSourcing';
-$pageDesc    = 'Custom sublimation jerseys, yoga pants, gym wear and sports uniforms from Pakistan. OEM branding, bulk orders, fast lead times.';
+$pageTitle = 'Activewear & Sports Uniforms Sourcing in Pakistan';
+$pageDesc = 'Source custom activewear and sports uniforms from Pakistan. Define fabrics, fit, sublimation, branding, quantities and sample requirements.';
 require __DIR__ . '/product-template.php';

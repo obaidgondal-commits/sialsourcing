@@ -1,150 +1,72 @@
 <?php
-$pageTitle     = 'Get a Free Sourcing Quote — Pakistan Manufacturer Vetting & Supply Chain | SialSourcing';
-$pageDesc      = 'Tell us what you are sourcing and get a manufacturer shortlist, compliance overview, and indicative pricing within 24 hours. Free, no obligation.';
+require_once __DIR__ . '/config.php';
+header('Cache-Control: no-store, private');
+$pageTitle = 'Request a Pakistan Sourcing Quote';
+$pageDesc = 'Send your product brief, quantity and destination. Discuss sourcing from Sialkot, Wazirabad and Faisalabad with SialSourcing.';
 $canonicalPath = '/contact';
-require_once __DIR__ . '/includes/header.php';
-
-$subjects = [
-    'Custom Soccer Balls',
-    'Activewear & Sports Uniforms',
-    'Uniforms & Tactical Wear',
-    'Surgical Instruments',
-    'Sports Goods',
-    'Leather Products',
-    'Cutlery & Kitchenware',
-    'Multiple Products',
-    'Other',
-];
-
-// Preselect the subject when arriving from a product page (/contact?product=slug)
+$subjects = ['Dental Instruments','Surgical Instruments','Custom Soccer Balls','Activewear & Sports Uniforms','Uniforms & Tactical Wear','Sports Goods','Leather Products','Cutlery & Kitchenware','Textiles & Home Linens','Multiple Products','Other'];
+$regions = ['Not sure yet','Sialkot','Wazirabad','Faisalabad','Multiple regions'];
 $preselect = '';
-if (!empty($_GET['product'])) {
-    $st = db()->prepare("SELECT title FROM products WHERE slug=? AND is_active=1");
-    $st->execute([trim($_GET['product'])]);
+$productQuery = is_string($_GET['product'] ?? null) ? $_GET['product'] : '';
+if ($productQuery === 'home-textiles') $preselect = 'Textiles & Home Linens';
+elseif ($productQuery !== '') {
+    $st = db()->prepare('SELECT title FROM products WHERE slug=? AND is_active=1');
+    $st->execute([$productQuery]);
     $preselect = $st->fetchColumn() ?: '';
+    if ($preselect && !in_array($preselect, $subjects, true)) $subjects[] = $preselect;
 }
-
-$success = false;
-$error   = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name    = trim($_POST['name'] ?? '');
-    $email   = trim($_POST['email'] ?? '');
-    $company = trim($_POST['company'] ?? '');
-    $phone   = trim($_POST['phone'] ?? '');
-    $subject = trim($_POST['subject'] ?? '');
-    $message = trim($_POST['message'] ?? '');
-
-    if (!empty($_POST['website'])) {
-        // Honeypot tripped — pretend success, store nothing
-        $success = true;
-    } elseif (!csrf_ok()) {
-        $error = 'Your session expired — please resubmit the form.';
-    } elseif (!$name || !$email || !$message) {
-        $error = 'Please fill in all required fields.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Please enter a valid email address.';
-    } elseif (strlen($name) > 200 || strlen($subject) > 200 || strlen($message) > 5000) {
-        $error = 'Your message is too long — please shorten it and resubmit.';
-    } else {
-        db()->prepare("INSERT INTO contact_submissions (name,email,company,phone,subject,message) VALUES (?,?,?,?,?,?)")
-            ->execute([$name,$email,$company,$phone,$subject,$message]);
-
-        // Notify by email — the enquiry is already saved, so a mail failure
-        // is logged but never blocks the submission.
-        $to       = setting('contact_email', 'info@sialsourcing.com');
-        $safeName = str_replace(["\r", "\n"], ' ', $name);
-        $safeMail = str_replace(["\r", "\n"], '', $email);
-        $body     = "New enquiry via sialsourcing.com\n\n"
-                  . "Name: $safeName\nEmail: $safeMail\nCompany: $company\nPhone: $phone\nSourcing: $subject\n\n$message";
-        $headers  = "From: SialSourcing Website <no-reply@sialsourcing.com>\r\nReply-To: $safeMail";
-        if (!@mail($to, 'New Enquiry: ' . ($subject ?: 'General'), $body, $headers)) {
-            error_log('contact.php: mail() failed for enquiry from ' . $safeMail);
+$regionQuery = is_string($_GET['region'] ?? null) && in_array($_GET['region'], $regions, true) ? $_GET['region'] : 'Not sure yet';
+$values = ['name'=>'','email'=>'','company'=>'','phone'=>'','subject'=>$preselect ?: 'Other','region'=>$regionQuery,'country'=>'','quantity'=>'','deadline'=>'','message'=>''];
+$error = '';
+$success = !empty($_SESSION['rfq_received']);
+unset($_SESSION['rfq_received']);
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+    $success = false;
+    foreach($values as $key => $value) {
+        if (isset($_POST[$key]) && !is_string($_POST[$key])) $error = 'Please enter a valid text value in each field.';
+        $values[$key] = is_string($_POST[$key] ?? null) ? trim($_POST[$key]) : '';
+    }
+    $limits = ['name'=>200,'email'=>200,'company'=>200,'phone'=>50,'subject'=>200,'region'=>50,'country'=>120,'quantity'=>150,'deadline'=>100,'message'=>4000];
+    if (!$error && !csrf_ok()) $error = 'Your form session expired. Please submit again.';
+    foreach($limits as $key=>$limit) if (strlen($values[$key]) > $limit) $error = 'One of your entries is too long. Please shorten it and try again.';
+    if (!$error && (!$values['name'] || !$values['email'] || !$values['country'] || !$values['message'])) $error = 'Please complete your name, email, destination and product requirements.';
+    if (!$error && (!filter_var($values['email'], FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $values['email'].$values['subject']))) $error = 'Please enter a valid email and product category.';
+    if (!$error && !in_array($values['region'],$regions,true)) $error = 'Please select a sourcing region.';
+    if (!$error && !empty($_POST['website'])) {
+        $_SESSION['rfq_received'] = true;
+        header('Location: /contact', true, 303); exit;
+    }
+    if (!$error && !rate_limit('rfq:' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 5, 600)) $error = 'You have sent several requests. Please wait a few minutes before trying again.';
+    if (!$error) {
+        $message = "Destination: {$values['country']}\nRegion: {$values['region']}\nQuantity: {$values['quantity']}\nTarget date: {$values['deadline']}\n\n{$values['message']}";
+        try {
+            db()->prepare('INSERT INTO contact_submissions (name,email,company,phone,subject,message) VALUES (?,?,?,?,?,?)')->execute([$values['name'],$values['email'],$values['company'],$values['phone'],$values['subject'],$message]);
+        } catch (Throwable $ex) {
+            error_log('RFQ storage failed.');
+            $error = 'We could not save your request. Please try again or email our team.';
         }
-        $success = true;
+        if (!$error) {
+            try {
+                send_notification(setting('contact_email','info@sialsourcing.com'), 'New sourcing brief: '.$values['subject'], "Name: {$values['name']}\nCompany: {$values['company']}\nEmail: {$values['email']}\nPhone: {$values['phone']}\n\n$message", $values['email']);
+            } catch (Throwable $ex) { error_log('RFQ saved; notification requires attention.'); }
+            $_SESSION['rfq_received'] = true;
+            header('Location: /contact', true, 303); exit;
+        }
     }
 }
+require __DIR__ . '/includes/header.php';
 ?>
-
-<div style="padding-top:100px;min-height:100vh;background:var(--cream);">
-  <div class="container contact-grid">
-
-    <div class="reveal-left">
-      <div class="section-label">Get In Touch</div>
-      <h1 style="font-size:clamp(2rem,4vw,3rem);margin-bottom:1rem;">Let's Source Together</h1>
-      <p style="margin-bottom:2rem;">Tell us what you're looking for and our team will respond within 24 hours with a sourcing plan and indicative pricing.</p>
-
-      <div style="display:flex;flex-direction:column;gap:1.25rem;margin-bottom:2.5rem;">
-        <div style="display:flex;align-items:center;gap:1rem;">
-          <div class="contact-icon-tile"><?= icon('mail', 20) ?></div>
-          <div><div style="font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;">Email</div>
-          <a href="mailto:<?= e(setting('contact_email')) ?>" style="color:var(--text);font-weight:600;"><?= e(setting('contact_email')) ?></a></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:1rem;">
-          <div class="contact-icon-tile"><?= icon('phone', 20) ?></div>
-          <div><div style="font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;">Phone / WhatsApp</div>
-          <a href="tel:<?= e(setting('contact_phone')) ?>" style="color:var(--text);font-weight:600;"><?= e(setting('contact_phone')) ?></a></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:1rem;">
-          <div class="contact-icon-tile"><?= icon('map-pin', 20) ?></div>
-          <div><div style="font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;">Location</div>
-          <span style="color:var(--text);font-weight:600;"><?= e(setting('contact_address')) ?></span></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="reveal-right">
-      <?php if ($success): ?>
-        <div style="background:#dcfce7;border:1px solid #86efac;border-radius:var(--radius);padding:2rem;text-align:center;">
-          <div style="color:#16a34a;margin-bottom:1rem;"><?= icon('check-circle', 44) ?></div>
-          <h3 style="color:#166534;margin-bottom:0.5rem;">Enquiry Received!</h3>
-          <p style="color:#16a34a;">Thank you. We'll get back to you within 24 hours.</p>
-        </div>
-      <?php else: ?>
-        <div style="background:var(--white);border-radius:var(--radius);padding:2.5rem;box-shadow:0 4px 30px rgba(0,0,0,0.06);border:1px solid var(--cream-dark);">
-          <?php if ($error): ?>
-            <div class="alert" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:8px;padding:0.75rem 1rem;margin-bottom:1.25rem;font-size:0.88rem;"><?= e($error) ?></div>
-          <?php endif; ?>
-          <form method="post" action="/contact">
-            <?= csrf_field() ?>
-            <input type="text" name="website" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
-            <div class="form-fields-grid">
-              <div class="field">
-                <label class="field-label">Full Name *</label>
-                <input class="field-input" type="text" name="name" required maxlength="200" placeholder="John Smith" value="<?= e($_POST['name'] ?? '') ?>">
-              </div>
-              <div class="field">
-                <label class="field-label">Email *</label>
-                <input class="field-input" type="email" name="email" required maxlength="200" placeholder="john@company.com" value="<?= e($_POST['email'] ?? '') ?>">
-              </div>
-              <div class="field">
-                <label class="field-label">Company</label>
-                <input class="field-input" type="text" name="company" maxlength="200" placeholder="Your Company" value="<?= e($_POST['company'] ?? '') ?>">
-              </div>
-              <div class="field">
-                <label class="field-label">Phone / WhatsApp</label>
-                <input class="field-input" type="text" name="phone" maxlength="50" placeholder="+1 555 000 0000" value="<?= e($_POST['phone'] ?? '') ?>">
-              </div>
-            </div>
-            <div class="field" style="margin-bottom:1rem;">
-              <label class="field-label">What are you sourcing?</label>
-              <select class="field-input" name="subject" style="background:#fff;">
-                <?php $sel = $_POST['subject'] ?? $preselect; ?>
-                <?php foreach ($subjects as $s): ?>
-                <option <?= $sel === $s ? 'selected' : '' ?>><?= e($s) ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="field" style="margin-bottom:1.5rem;">
-              <label class="field-label">Message / Requirements *</label>
-              <textarea class="field-input" name="message" required maxlength="5000" rows="5" placeholder="Tell us about your product requirements, quantities, target price, and any certifications needed..."><?= e($_POST['message'] ?? '') ?></textarea>
-            </div>
-            <button type="submit" class="btn btn-gold" style="width:100%;justify-content:center;">Send Enquiry <?= icon('send', 17) ?></button>
-          </form>
-        </div>
-      <?php endif; ?>
-    </div>
-
-  </div>
+<div class="rfq-layout"><div class="rfq-intro"><p class="eyebrow"><?= $success ? 'Your brief is saved' : 'Your next sourcing project' ?></p><h1><?= $success ? 'Thank you.<br>We have your brief.' : 'Start with<br>what you need.' ?></h1><p><?= $success ? 'The team will review your requirements and follow up using the contact details you provided.' : 'Whether you have a finished specification or an early idea, tell us about your product. We will review the brief and confirm the next steps with you.' ?></p><a class="text-link" href="mailto:<?= e(setting('contact_email','info@sialsourcing.com')) ?>"><?= e(setting('contact_email','info@sialsourcing.com')) ?></a><details class="rfq-help"><summary>What happens next?</summary><ol><li>We clarify your product and destination requirements.</li><li>We assess suitable manufacturing capabilities.</li><li>We agree the quotation and sampling steps.</li></ol></details><details class="rfq-help"><summary>Already have a tech pack?</summary><p>Mention it in your brief. We will arrange a suitable way to receive your drawings, references and files.</p><a class="text-link" href="/resources">Download a sourcing brief template</a></details></div>
+<div>
+<?php if($success): ?><div class="form-success" role="status"><p class="eyebrow">Brief received</p><h2>Thank you for the details.</h2><p>Your request has been saved for the SialSourcing team to review. We will use the contact details you provided to follow up.</p><a class="text-link" href="/products">Continue exploring products</a></div>
+<?php else: ?><form class="rfq-form" method="post" action="/contact"><h2>Tell us about your project</h2><p class="field-note">Fields marked * are required.</p><?php if($error): ?><div class="form-alert" role="alert"><?= e($error) ?></div><?php endif; ?><?= csrf_field() ?><input type="text" name="website" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
+<div class="form-fields-grid">
+<?php foreach([['name','Your name *','text',200,'name'],['email','Business email *','email',200,'email'],['company','Company','text',200,'organization'],['phone','Phone / WhatsApp','tel',50,'tel']] as [$key,$label,$type,$max,$auto]): ?><div class="field"><label for="<?= $key ?>"><?= $label ?></label><input id="<?= $key ?>" name="<?= $key ?>" type="<?= $type ?>" maxlength="<?= $max ?>" autocomplete="<?= $auto ?>" value="<?= e($values[$key]) ?>" <?= in_array($key,['name','email']) ? 'required' : '' ?>></div><?php endforeach; ?>
 </div>
-
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<div class="field"><label for="subject">Product category</label><select id="subject" name="subject"><?php if($values['subject'] && !in_array($values['subject'],$subjects,true)) $subjects[]=$values['subject']; ?><?php foreach($subjects as $subject): ?><option <?= $values['subject']===$subject?'selected':'' ?>><?= e($subject) ?></option><?php endforeach; ?></select></div>
+<div class="form-fields-grid"><div class="field"><label for="country">Destination country & city *</label><input id="country" name="country" required maxlength="120" autocomplete="off" placeholder="e.g. Germany, Hamburg" value="<?= e($values['country']) ?>"></div><div class="field"><label for="region">Sourcing region</label><select id="region" name="region"><?php foreach($regions as $region): ?><option <?= $values['region']===$region?'selected':'' ?>><?= e($region) ?></option><?php endforeach; ?></select></div><div class="field"><label for="quantity">Estimated quantity</label><input id="quantity" name="quantity" maxlength="150" placeholder="e.g. 500 units per design" value="<?= e($values['quantity']) ?>"></div><div class="field"><label for="deadline">Target delivery date</label><input id="deadline" name="deadline" maxlength="100" placeholder="e.g. January 2027 / flexible" value="<?= e($values['deadline']) ?>"></div></div>
+<div class="field"><label for="message">Product requirements *</label><textarea id="message" name="message" required maxlength="4000" rows="6" placeholder="Describe the product, materials, sizes, branding, intended use and any market requirements. Please do not include payment details or confidential documents."><?= e($values['message']) ?></textarea></div>
+<p class="field-note">Your details will be used to review and respond to this enquiry. Please include only information needed for your sourcing request.</p><button class="btn btn-gold" type="submit">Send sourcing brief <?= icon('arrow-right',18) ?></button>
+</form><?php endif; ?>
+</div></div>
+<?php require __DIR__ . '/includes/footer.php'; ?>

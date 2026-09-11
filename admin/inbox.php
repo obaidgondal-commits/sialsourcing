@@ -5,11 +5,11 @@ require_once __DIR__ . '/includes/auth.php';
 
 if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['mark_read'])) {
     db()->prepare("UPDATE contact_submissions SET is_read=1 WHERE id=?")->execute([(int)$_POST['id']]);
-    header('Location: inbox.php'); exit;
+    header('Location: inbox.php', true, 303); exit;
 }
 if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['delete'])) {
     db()->prepare("DELETE FROM contact_submissions WHERE id=?")->execute([(int)$_POST['id']]);
-    header('Location: inbox.php'); exit;
+    header('Location: inbox.php', true, 303); exit;
 }
 
 $view = isset($_GET['view']) ? (int)$_GET['view'] : 0;
@@ -21,6 +21,7 @@ if ($view) {
 }
 
 $submissions = db()->query("SELECT * FROM contact_submissions ORDER BY submitted_at DESC")->fetchAll();
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <?php if ($view && $msg): ?>

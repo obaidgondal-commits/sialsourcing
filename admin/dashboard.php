@@ -13,6 +13,7 @@ $counts = [
 
 $recentEnquiries = db()->query("SELECT * FROM contact_submissions ORDER BY submitted_at DESC LIMIT 5")->fetchAll();
 $recentBlogs     = db()->query("SELECT * FROM blog_posts ORDER BY created_at DESC LIMIT 5")->fetchAll();
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <div class="stat-grid">

@@ -7,9 +7,9 @@ Options -Indexes
 ErrorDocument 404 /404.php
 
 # ---- Protect sensitive files ----
-<Files "config.php">
+<FilesMatch "^(config(?:\.example)?\.php|\..*|.*\.(?:sql|sqlite|db|bak|log|zip|md))$">
   Require all denied
-</Files>
+</FilesMatch>
 <FilesMatch "^(DEPLOYMENT_GUIDE\.txt|SEO_ACTION_PLAN\.txt|content-update\.sql)$">
   Require all denied
 </FilesMatch>
@@ -25,6 +25,15 @@ ErrorDocument 404 /404.php
 
 <IfModule mod_rewrite.c>
 RewriteEngine On
+
+# Private source/configuration folders must never be served from public_html.
+RewriteRule ^(?:\.git|\.github|\.preview|docs|database|scripts|private|work|tests)(?:/|$) - [F,L,NC]
+RewriteRule ^uploads/.*\.(?:php[0-9]?|phtml|phar|cgi|pl|sh)(?:[./]|$) - [F,L,NC]
+RewriteRule ^includes/ - [F,L,NC]
+RewriteRule ^admin/includes/ - [F,L,NC]
+RewriteCond %{THE_REQUEST} \s/+(?:product-template|config|config\.example)\.php[?\s] [NC]
+RewriteRule ^ - [F,L]
+
 
 # 1) Canonical host: force HTTPS + strip www in one hop
 RewriteCond %{HTTPS} off [OR]
@@ -44,7 +53,7 @@ RewriteRule ^ / [R=301,L]
 RewriteCond %{THE_REQUEST} \s/+blog-single\.php\?slug=([^&\s]+) [NC]
 RewriteRule ^ /blog/%1 [R=301,L,QSD]
 
-RewriteCond %{THE_REQUEST} \s/+(about|contact|blog|faq|team|solutions|lab-qc|products|activewear-sports-uniforms|surgical-instruments|sports-goods|leather-goods|cutlery|custom-soccer-balls|uniforms-tactical-wear)\.php[?\s] [NC]
+RewriteCond %{THE_REQUEST} \s/+(about|contact|blog|faq|team|solutions|lab-qc|products|activewear-sports-uniforms|surgical-instruments|dental-instruments|sports-goods|leather-goods|cutlery|custom-soccer-balls|promotional-soccer-balls|uniforms-tactical-wear|security-guard-uniforms|medical-scrubs|resources|for-manufacturers|qc-inspection-request|sourcing-regions|sialkot-sourcing|wazirabad-sourcing|faisalabad-sourcing|home-textiles)\.php[?\s] [NC]
 RewriteRule ^ /%1 [R=301,L]
 
 # 4) 301 the /products/{slug} URLs the old sitemap advertised (they 404 today)
@@ -55,7 +64,7 @@ RewriteRule ^sitemap\.xml$ sitemap.php [L]
 
 # 6) Internal rewrites — the URL bar stays clean
 #    Blog posts: /blog/{slug}
-RewriteRule ^blog/([a-zA-Z0-9-]+)$ blog-single.php?slug=$1 [L,QSA]
+RewriteRule ^blog/([a-zA-Z0-9-]+)$ blog-single.php?slug=$1 [L]
 
 #    Any top-level page whose .php file exists: /about, /sports-goods, ...
 #    A future category page works with NO .htaccess edit — the wrapper
@@ -99,7 +108,7 @@ RewriteRule ^([a-z0-9-]+)$ $1.php [L]
   ExpiresByType application/font-woff "access plus 1 year"
 
   # HTML — 1 hour
-  ExpiresByType text/html "access plus 1 hour"
+  # Dynamic HTML cache policy is controlled by PHP, never a blanket public cache.
 </IfModule>
 
 # Cache-Control headers

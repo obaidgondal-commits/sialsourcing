@@ -1,5 +1,5 @@
 <?php
 $productSlug = 'promotional-soccer-balls';
-$pageTitle   = 'Promotional Soccer Balls with Logo — Bulk Giveaway Balls ';
-$pageDesc    = ' SialSourcing|Promotional soccer balls with your logo, manufacturer-direct: full-surface printing, sizes 1-5, from 100 balls, delivered to the USA.';
+$pageTitle = 'Promotional Soccer Balls Sourcing from Sialkot';
+$pageDesc = 'Plan a custom promotional soccer ball order. Discuss size, printing, construction, packaging, quantities and samples with SialSourcing.';
 require __DIR__ . '/product-template.php';

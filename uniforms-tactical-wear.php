@@ -1,5 +1,5 @@
 <?php
 $productSlug = 'uniforms-tactical-wear';
-$pageTitle   = 'Uniform & Tactical Wear Manufacturer — Police, Security, EMS, Workwear | SialSourcing';
-$pageDesc    = 'Custom uniforms and tactical wear from Sialkot: police & security uniforms, duty gear, medical scrubs, workwear and school uniforms. Bulk production, AQL-inspected, USD payment via Dallas.';
+$pageTitle = 'Uniforms & Workwear Sourcing from Pakistan';
+$pageDesc = 'Source uniforms, workwear and tactical apparel from Pakistan. Discuss materials, sizing, functional requirements, sampling and quality checks.';
 require __DIR__ . '/product-template.php';

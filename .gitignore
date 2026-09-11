@@ -1,5 +1,9 @@
 config.php
 *.sql
+!database/schema.sql
+.preview/
+uploads/
+.env.*
 public_html
 error_log
 .env

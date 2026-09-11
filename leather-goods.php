@@ -1,5 +1,5 @@
 <?php
 $productSlug = 'leather-goods';
-$pageTitle = 'Leather Products Exporter Pakistan — REACH Compliant Gloves, Jackets, Wallets | SialSourcing';
-$pageDesc    = 'REACH compliant leather gloves, jackets, wallets and accessories from Sialkot. Full-grain leather, ethical tanneries, custom OEM available.';
+$pageTitle = 'Leather Goods & Gloves Sourcing from Pakistan';
+$pageDesc = 'Source leather goods and gloves from Pakistan. Specify leather, lining, construction, finish, intended use and testing requirements.';
 require __DIR__ . '/product-template.php';

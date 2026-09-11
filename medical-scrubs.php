@@ -1,5 +1,5 @@
 <?php
 $productSlug = 'medical-scrubs';
-$pageTitle   = 'Medical Scrubs Manufacturer — Custom Scrub Sets & Lab Coats ';
-$pageDesc    = ' SialSourcing|Custom medical scrubs and lab coats: antimicrobial fabrics, 4-way stretch, private label from 50 sets per style. QC inspected, USD payment via Dallas.';
+$pageTitle = 'Medical Scrubs & Lab Coats Sourcing from Pakistan';
+$pageDesc = 'Source medical scrubs and lab coats from Pakistan. Discuss fabric composition, fit, colours, laundering performance and custom branding.';
 require __DIR__ . '/product-template.php';

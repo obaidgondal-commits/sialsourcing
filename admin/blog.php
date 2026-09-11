@@ -59,6 +59,7 @@ $showForm = isset($_GET['new']) || $editPost;
 $posts    = db()->query("SELECT * FROM blog_posts ORDER BY created_at DESC")->fetchAll();
 
 [$msgType, $msgText] = $msg ? explode(':', $msg, 2) : [null, null];
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <?php if ($msgText): ?>

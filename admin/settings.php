@@ -20,8 +20,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $st = db()->prepare("SELECT password FROM admin_users WHERE username=?");
         $st->execute([$_SESSION['admin_user']]);
         $hash = $st->fetchColumn();
-        if (password_verify($current,$hash)) {
+        if (strlen($new) < 12 || strlen($new) > 72) {
+            $msg = 'error:Use a password between 12 and 72 bytes long.';
+        } elseif ($hash && password_verify($current,$hash)) {
             db()->prepare("UPDATE admin_users SET password=? WHERE username=?")->execute([password_hash($new,PASSWORD_DEFAULT),$_SESSION['admin_user']]);
+            session_regenerate_id(true);
             $msg = 'success:Password changed.';
         } else {
             $msg = 'error:Current password is incorrect.';
@@ -33,6 +36,7 @@ $keys = ['site_name','site_tagline','contact_email','contact_phone','contact_add
 $s = [];
 foreach ($keys as $k) $s[$k] = setting($k,'');
 [$msgType,$msgText] = $msg ? explode(':',$msg,2) : [null,null];
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <?php if ($msgText): ?>
@@ -69,8 +73,8 @@ foreach ($keys as $k) $s[$k] = setting($k,'');
     <form method="post" style="padding:1.5rem;">
       <?= csrf_field() ?>
       <input type="hidden" name="action" value="password">
-      <div class="form-group" style="margin-bottom:1rem;"><label>Current Password</label><input type="password" name="current_password" required></div>
-      <div class="form-group" style="margin-bottom:1.25rem;"><label>New Password</label><input type="password" name="new_password" required minlength="8"></div>
+      <div class="form-group" style="margin-bottom:1rem;"><label>Current Password</label><input type="password" name="current_password" required autocomplete="current-password"></div>
+      <div class="form-group" style="margin-bottom:1.25rem;"><label>New Password</label><input type="password" name="new_password" required minlength="12" maxlength="72" autocomplete="new-password"></div>
       <button type="submit" class="btn-save">🔐 Change Password</button>
     </form>
   </div>
