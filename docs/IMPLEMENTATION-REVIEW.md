@@ -1,5 +1,7 @@
 # SialSourcing review and implemented foundation
 
+> **Updated owner requirement — 11 September 2026:** preserve existing data, content, downloads, URLs and CMS behavior while improving the already-live English website. The current implementation draft and its existing ZIP do not yet meet that requirement. Follow [the revised preservation review](PRESERVATION-REVIEW.md) before deployment.
+
 Reviewed on 11 September 2026. Starting repository: `obaidgondal-commits/sialsourcing`, commit `c192687`.
 
 ## Material actually available

@@ -1,15 +1,17 @@
 # Catalogue architecture and expansion sequence
 
+> **Updated owner requirement — 11 September 2026:** preserve existing data, content, downloads, URLs and CMS behavior while improving the already-live English website. The current implementation draft and its existing ZIP do not yet meet that requirement. Follow [the revised preservation review](PRESERVATION-REVIEW.md) before deployment.
+
 This is a proposed next stage, not a description of functionality already implemented. The original Claude specification and source catalogues are still needed for reconciliation.
 
 ## Two connected workstreams
 
-1. **Public acquisition website:** fast server-rendered category and regional guides, accurate product information, clear requests for quotation, preserved URLs and measured qualified enquiries. This release implements that foundation on PHP/MySQL-compatible hosting.
+1. **Public acquisition website:** fast server-rendered category and regional guides, accurate product information, clear requests for quotation, preserved URLs and measured qualified enquiries. The draft explores that foundation on PHP/MySQL-compatible hosting but requires preservation corrections before deployment.
 2. **Private sourcing operations:** verified supplier capabilities, document evidence, commercial information, buyer requests and quotation workflow. Start with a small dental pilot while retaining the wider product business. Do not expose this dataset through the public site or commit its records to GitHub.
 
 ## Identity and taxonomy
 
-Use a stable internal identifier that survives display-name, URL and supplier changes. Model industry → product family → pattern/design → variant. A variant is a meaningful difference in dimensions, material, finish, construction or packaging, not an excuse to create a near-identical search page.
+Preserve existing identifiers, references and URLs. If needed, add a stable internal identifier alongside them that survives display-name, URL and supplier changes; do not replace existing IDs or migrate records as part of the website upgrade. Model industry → product family → pattern/design → variant. A variant is a meaningful difference in dimensions, material, finish, construction or packaging, not an excuse to create a near-identical search page.
 
 Product families share identity and editorial fields but have different specification groups:
 

@@ -2,6 +2,10 @@
 
 PHP website and CMS for product sourcing across Sialkot, Wazirabad and Faisalabad, Pakistan. The upgrade preserves existing product URLs while adding regional sourcing guides, clearer RFQs and a more consistent buyer experience.
 
+## Current release status
+
+The owner requires preservation of the already-live English site's data and content. This draft does not yet meet that requirement: it replaces some public copy/PDFs and disconnects several CMS outputs. Do not deploy the existing ZIP. See [the revised preservation review](docs/PRESERVATION-REVIEW.md) for required corrections. No production deployment or database change has occurred.
+
 ## Preview
 
 Use PHP 8.2+ with PDO SQLite for local preview:

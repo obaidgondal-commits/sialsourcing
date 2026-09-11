@@ -1,5 +1,7 @@
 # Expansion review — 11 September 2026
 
+> **Updated owner requirement — 11 September 2026:** preserve existing data, content, downloads, URLs and CMS behavior while improving the already-live English website. The current implementation draft and its existing ZIP do not yet meet that requirement. Follow [the revised preservation review](PRESERVATION-REVIEW.md) before deployment.
+
 ## Scope and evidence
 
 This review covers the Claude excerpt supplied by the owner, the accessible public website, and current primary guidance. The original 14-document package, `REVIEW-BRIEF.md`, `CONTEXT.md`, manufacturer agreements and source catalogues were not available for this review. It is therefore a provisional second opinion, not a claim to have reviewed those files.
@@ -12,7 +14,7 @@ The new public regional pages are buyer guides. They explain how to prepare a so
 
 ### 1. Keep P0 useful and bounded
 
-Ship the public-site improvements independently of full catalogue ingestion. P0 includes a polished broad sourcing site, preserved existing URLs, truthful claims, functioning RFQs, crawl/index controls, accessibility, a repeatable GitHub release process and verified Hostinger deployment instructions.
+Improve the already-live public site independently of full catalogue ingestion. P0 starts with a private baseline and staging copy, then preserves existing data, copy, downloads, URLs and CMS behavior while improving design, technical SEO, accessibility, RFQs and deployment reliability. The current draft needs the preservation corrections recorded in PRESERVATION-REVIEW.md before release.
 
 Advance dental taxonomy and the private capability matrix as a separate pilot. Publication requires enough evidence to support the claims on each product page. It does not require interviewing all 120 suppliers before any public-site improvement can ship. Do not make OCR the critical path: first settle the data model, rights, proof requirements and staff workflow with a small representative sample.
 
@@ -26,17 +28,17 @@ Absolute supplier secrecy is an unsuitable promise for regulated devices. ANVISA
 
 These sources support a required-disclosure exception, not unrestricted access to every internal commercial record. A Brazilian regulatory specialist must confirm the route for the specific device, the holder arrangement, label/dossier requirements and public visibility of manufacturer data before Brazil-ready offers are published. An NDA cannot override legally required disclosure. This review is not legal clearance.
 
-### 3. Publish English now; choose later languages deliberately
+### 3. Improve the existing English site; choose later languages deliberately
 
-Launch complete English content and make content fields/routes ready for localization. Choose an additional language using the sales team's ability to support enquiries, actual relationships, target sectors and emerging search data. Lack of demand data does not prevent a small commercially justified pilot; it does argue against translating thousands of unverified pages.
+English is already live. Preserve its current URLs and content; do not move it to an `/en/` path just to prepare for translation. Check existing Search Console, analytics and enquiry history before concluding that demand data is absent. Choose any additional language using that evidence, the sales team's ability to support enquiries, relationships and target sectors. A language expansion is not part of the preservation release.
 
-Use separate locale URLs, full translations, a visible language switcher and reciprocal `hreflang` for equivalent pages. Avoid forced IP-based redirects and translated navigation around untranslated main content. Portuguese is not automatically the first language simply because ANVISA is discussed. [Google multilingual guidance](https://developers.google.com/search/docs/advanced/crawling/managing-multi-regional-sites).
+Use separate locale URLs, full translations, a visible language switcher and reciprocal `hreflang` for equivalent pages. Avoid forced IP-based redirects and translated navigation around untranslated main content. Portuguese is not automatically the first language simply because ANVISA is discussed. [Google multilingual guidance](https://developers.google.com/search/docs/specialty/international/managing-multi-regional-sites).
 
 ### 4. Do not declare `100/xx` references universally generic
 
 Manufacturer catalogues demonstrate usage, not freedom to reuse all identifiers, images or text. Novacore uses the exact `100/17`-style references; HuFriedyGroup distinguishes pattern numbers from its own `F150` ordering reference. That is evidence to keep standard-pattern identity separate from supplier catalogue references. [Novacore extracting forceps](https://novacoreindustry.com/products.php?id=21), [HuFriedyGroup surgical catalogue](https://catalog.hu-friedy.com/surgical/files/basic-html/page67.html).
 
-Use a SialSourcing identifier as the stable public key. Keep original references in a source-aware crosswalk with supplier, document/version, page, review status and rights information. Verify pattern, dimensions and working geometry before declaring equivalence. Common-looking numbering is not proof of a universal standard or an IP clearance conclusion. The actual catalogues, agreements and applicable rights need review.
+Preserve all existing identifiers and public URLs. A future taxonomy may add a stable internal SialSourcing identifier alongside existing records, without renumbering them. Keep original references in a source-aware crosswalk with supplier, document/version, page, review status and rights information. Verify pattern, dimensions and working geometry before declaring equivalence. Common-looking numbering is not proof of a universal standard or an IP clearance conclusion. The actual catalogues, agreements and applicable rights need review.
 
 ## SEO and content corrections
 
@@ -65,6 +67,6 @@ The public sitemap returned a bot-verification page to the research browser; som
 
 Measure qualified enquiries by category and destination, completed RFQs, response time, accepted quotations and repeat customers alongside organic impressions/clicks. Review which queries attract relevant buyers and which content answers their procurement questions. No technical configuration can guarantee rankings or capture every international buyer.
 
-## Implemented editorial changes
+## Draft editorial changes requiring revision
 
-The refreshed About, Solutions and Lab/QC pages use reviewed static content. Legacy `solutions` and `lab_tests` CMS records remain unchanged and need editorial/evidence review before public reuse; editing those tables no longer changes these three public pages. Product descriptions, specifications, image URLs, FAQs and blog content remain database-driven and require a production-content review before launch.
+The draft About, Solutions and Lab/QC pages use static content. Legacy `solutions` and `lab_tests` records remain unchanged, but admin edits no longer appear on the corresponding public pages. The homepage also stops rendering several CMS collections, and all six PDFs were replaced. These changes conflict with the clarified preservation requirement. Restore the original content and CMS connections for the preservation release; keep suggested wording corrections separate. See PRESERVATION-REVIEW.md for the full audit.
