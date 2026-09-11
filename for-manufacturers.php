@@ -2,42 +2,94 @@
 $pageTitle     = 'For Manufacturers — Join Our Vetted Factory Network | Export Orders from International Buyers';
 $pageDesc      = 'Sialkot & Pakistan manufacturers: partner with SialSourcing to receive export orders from US and European buyers. Apply to join our vetted network — audit-based onboarding, reliable payment.';
 $canonicalPath = '/for-manufacturers';
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/config.php';
+header('Cache-Control: no-store, private');
 
-$success = false;
-$error   = '';
+
+$success = isset($_SESSION['manufacturer_application_received']) && time() - (int)$_SESSION['manufacturer_application_received'] < 600;
+unset($_SESSION['manufacturer_application_received']);
+$error = '';
+$values = [];
+$limits = ['company_name' => 200, 'contact_name' => 200, 'email' => 200, 'phone' => 50, 'city' => 100, 'product_categories' => 255, 'certifications' => 255, 'website_url' => 255, 'message' => 5000];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $company = trim($_POST['company_name'] ?? '');
-    $contact = trim($_POST['contact_name'] ?? '');
-    $email   = trim($_POST['email'] ?? '');
-    $phone   = trim($_POST['phone'] ?? '');
-    $city    = trim($_POST['city'] ?? '');
-    $cats    = trim($_POST['product_categories'] ?? '');
-    $certs   = trim($_POST['certifications'] ?? '');
-    $site    = trim($_POST['website_url'] ?? '');
-    $msg     = trim($_POST['message'] ?? '');
+    $success = false;
+    $malformed = false;
+    foreach ($limits as $field => $limit) {
+        $value = $_POST[$field] ?? '';
+        if (!is_string($value)) {
+            $malformed = true;
+            $value = '';
+        }
+        $values[$field] = trim($value);
+        $_POST[$field] = $values[$field];
+    }
+    $honeypot = $_POST['portfolio'] ?? '';
+    if (!is_string($honeypot)) $malformed = true;
 
-    if (!empty($_POST['portfolio'])) {
-        $success = true; // honeypot
+    if ($malformed) {
+        http_response_code(400);
+        $error = 'Invalid form data. Please check the fields and try again.';
     } elseif (!csrf_ok()) {
-        $error = 'Your session expired — please resubmit the form.';
-    } elseif (!$company || !$contact || !$email || !$city || !$cats) {
-        $error = 'Please fill in all required fields.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Please enter a valid email address.';
-    } elseif (strlen($msg) > 5000) {
-        $error = 'Your message is too long — please shorten it.';
-    } else {
-        db()->prepare("INSERT INTO manufacturer_applications (company_name,contact_name,email,phone,city,product_categories,certifications,website,message) VALUES (?,?,?,?,?,?,?,?,?)")
-            ->execute([$company,$contact,$email,$phone,$city,$cats,$certs,$site,$msg]);
-        $to       = setting('contact_email', 'info@sialsourcing.com');
-        $safeMail = str_replace(["\r", "\n"], '', $email);
-        @mail($to, 'New Manufacturer Application: ' . substr($company, 0, 60),
-              "Company: $company\nContact: $contact <$safeMail>\nPhone: $phone\nCity: $city\nCategories: $cats\nCertifications: $certs\nWebsite: $site\n\n$msg",
-              "From: SialSourcing Website <no-reply@sialsourcing.com>\r\nReply-To: $safeMail");
+        http_response_code(400);
+        $error = 'Your session expired — refresh this page and resubmit the form.';
+    } elseif ($honeypot !== '') {
         $success = true;
+    } else {
+        foreach (['company_name', 'contact_name', 'email', 'city', 'product_categories'] as $field) {
+            if ($values[$field] === '') $error = 'Please fill in all required fields.';
+        }
+        foreach ($limits as $field => $limit) {
+            if (strlen($values[$field]) > $limit) $error = 'One or more fields are too long. Please shorten them and try again.';
+        }
+        if (!filter_var($values['email'], FILTER_VALIDATE_EMAIL)) $error = 'Please enter a valid email address.';
+        if ($values['website_url'] !== '' && (!filter_var($values['website_url'], FILTER_VALIDATE_URL) || !in_array(strtolower(parse_url($values['website_url'], PHP_URL_SCHEME) ?: ''), ['https','http'], true))) {
+            $error = 'Please enter a complete website address starting with https:// or http://.';
+        }
+
+        if ($error === '' && !rate_limit('manufacturer_application:' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 5, 900)) {
+            http_response_code(429);
+            header('Retry-After: 900');
+            $error = 'Too many requests. Please wait 15 minutes and try again, or contact us by email.';
+        }
+        if ($error === '') {
+            try {
+                db()->prepare("INSERT INTO manufacturer_applications (company_name,contact_name,email,phone,city,product_categories,certifications,website,message) VALUES (?,?,?,?,?,?,?,?,?)")
+                    ->execute([$values['company_name'],$values['contact_name'],$values['email'],$values['phone'],$values['city'],$values['product_categories'],$values['certifications'],$values['website_url'],$values['message']]);
+                $subject = 'New Manufacturer Application';
+                $body = "Company: {$values['company_name']}
+Contact: {$values['contact_name']} <{$values['email']}>
+Phone: {$values['phone']}
+City: {$values['city']}
+Categories: {$values['product_categories']}
+Certifications: {$values['certifications']}
+Website: {$values['website_url']}
+
+{$values['message']}";
+                $success = true;
+            } catch (Throwable $exception) {
+                http_response_code(503);
+                error_log('for-manufacturers.php: enquiry could not be saved.');
+                $error = 'We could not save your request. Please try again or contact us by email.';
+            }
+            if ($success) {
+                try {
+                    if (!send_notification(setting('contact_email', 'info@sialsourcing.com'), $subject, $body, $values['email'])) {
+                        error_log('for-manufacturers.php: enquiry saved; email notification was not sent.');
+                    }
+                } catch (Throwable $exception) {
+                    error_log('for-manufacturers.php: enquiry saved; email notification failed.');
+                }
+            }
+        }
+    }
+    if ($success) {
+        $_SESSION['manufacturer_application_received'] = time();
+        header('Location: /for-manufacturers', true, 303);
+        exit;
     }
 }
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <div style="padding-top:80px;">
@@ -114,16 +166,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <?= csrf_field() ?>
               <input type="text" name="portfolio" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
               <div class="form-fields-grid">
-                <div class="field"><label class="field-label">Company Name *</label><input class="field-input" type="text" name="company_name" required maxlength="200" value="<?= e($_POST['company_name'] ?? '') ?>"></div>
-                <div class="field"><label class="field-label">Contact Person *</label><input class="field-input" type="text" name="contact_name" required maxlength="200" value="<?= e($_POST['contact_name'] ?? '') ?>"></div>
-                <div class="field"><label class="field-label">Email *</label><input class="field-input" type="email" name="email" required maxlength="200" value="<?= e($_POST['email'] ?? '') ?>"></div>
-                <div class="field"><label class="field-label">Phone / WhatsApp</label><input class="field-input" type="text" name="phone" maxlength="50" value="<?= e($_POST['phone'] ?? '') ?>"></div>
-                <div class="field"><label class="field-label">City *</label><input class="field-input" type="text" name="city" required maxlength="100" placeholder="e.g. Sialkot" value="<?= e($_POST['city'] ?? '') ?>"></div>
-                <div class="field"><label class="field-label">Website (if any)</label><input class="field-input" type="text" name="website_url" maxlength="255" value="<?= e($_POST['website_url'] ?? '') ?>"></div>
+                <div class="field"><label class="field-label" for="for-manufacturers-company_name">Company Name *</label><input id="for-manufacturers-company_name" class="field-input" type="text" name="company_name" required maxlength="200" value="<?= e($_POST['company_name'] ?? '') ?>"></div>
+                <div class="field"><label class="field-label" for="for-manufacturers-contact_name">Contact Person *</label><input id="for-manufacturers-contact_name" class="field-input" type="text" name="contact_name" required maxlength="200" value="<?= e($_POST['contact_name'] ?? '') ?>"></div>
+                <div class="field"><label class="field-label" for="for-manufacturers-email">Email *</label><input id="for-manufacturers-email" class="field-input" type="email" name="email" required maxlength="200" value="<?= e($_POST['email'] ?? '') ?>"></div>
+                <div class="field"><label class="field-label" for="for-manufacturers-phone">Phone / WhatsApp</label><input id="for-manufacturers-phone" class="field-input" type="text" name="phone" maxlength="50" value="<?= e($_POST['phone'] ?? '') ?>"></div>
+                <div class="field"><label class="field-label" for="for-manufacturers-city">City *</label><input id="for-manufacturers-city" class="field-input" type="text" name="city" required maxlength="100" placeholder="e.g. Sialkot" value="<?= e($_POST['city'] ?? '') ?>"></div>
+                <div class="field"><label class="field-label" for="for-manufacturers-website_url">Website (if any)</label><input id="for-manufacturers-website_url" class="field-input" type="text" name="website_url" maxlength="255" placeholder="https://example.com" value="<?= e($_POST['website_url'] ?? '') ?>"></div>
               </div>
-              <div class="field" style="margin-bottom:1rem;"><label class="field-label">What You Manufacture *</label><input class="field-input" type="text" name="product_categories" required maxlength="255" placeholder="e.g. soccer balls, sublimation sportswear" value="<?= e($_POST['product_categories'] ?? '') ?>"></div>
-              <div class="field" style="margin-bottom:1rem;"><label class="field-label">Certifications Held</label><input class="field-input" type="text" name="certifications" maxlength="255" placeholder="e.g. ISO 9001, OEKO-TEX, BSCI" value="<?= e($_POST['certifications'] ?? '') ?>"></div>
-              <div class="field" style="margin-bottom:1.5rem;"><label class="field-label">Capacity, Export Experience &amp; Anything Else</label><textarea class="field-input" name="message" rows="4" maxlength="5000"><?= e($_POST['message'] ?? '') ?></textarea></div>
+              <div class="field" style="margin-bottom:1rem;"><label class="field-label" for="for-manufacturers-product_categories">What You Manufacture *</label><input id="for-manufacturers-product_categories" class="field-input" type="text" name="product_categories" required maxlength="255" placeholder="e.g. soccer balls, sublimation sportswear" value="<?= e($_POST['product_categories'] ?? '') ?>"></div>
+              <div class="field" style="margin-bottom:1rem;"><label class="field-label" for="for-manufacturers-certifications">Certifications Held</label><input id="for-manufacturers-certifications" class="field-input" type="text" name="certifications" maxlength="255" placeholder="e.g. ISO 9001, OEKO-TEX, BSCI" value="<?= e($_POST['certifications'] ?? '') ?>"></div>
+              <div class="field" style="margin-bottom:1.5rem;"><label class="field-label" for="for-manufacturers-message">Capacity, Export Experience &amp; Anything Else</label><textarea id="for-manufacturers-message" class="field-input" name="message" rows="4" maxlength="5000"><?= e($_POST['message'] ?? '') ?></textarea></div>
               <button type="submit" class="btn btn-gold" style="width:100%;justify-content:center;">Submit Application <?= icon('send', 17) ?></button>
             </form>
           </div>

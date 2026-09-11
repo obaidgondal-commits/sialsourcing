@@ -1,104 +1,26 @@
 # SialSourcing
 
-> SialSourcing is Pakistan's premier end-to-end supply chain company 
-and buying house, headquartered in Sialkot, Punjab, Pakistan with 
-offices in Dallas, Texas USA and Paris, France. We connect 
-international buyers with verified manufacturers across seven product 
-categories: custom soccer balls, activewear and sports uniforms, 
-uniforms and tactical wear, surgical instruments, sports goods, 
-leather products, and stainless steel cutlery.
+> SialSourcing is a sourcing and supply chain coordination partner for international buyers of products from Pakistan. Supplier suitability, commercial terms, documentation and inspection scope are confirmed against each buyer's specific brief.
 
-## What We Do
+## Regions
+- [Sialkot sourcing](https://sialsourcing.com/sialkot-sourcing): Instruments, sports goods, apparel and leather goods.
+- [Wazirabad sourcing](https://sialsourcing.com/wazirabad-sourcing): Cutlery and kitchenware.
+- [Faisalabad sourcing](https://sialsourcing.com/faisalabad-sourcing): Textiles, apparel and home linens.
 
-SialSourcing manages the complete sourcing process for international 
-buyers — manufacturer vetting, quality inspection (AQL 2.5), 
-compliance verification (ISO 13485, CE marking, FDA Green List, 
-OEKO-TEX, REACH, EN388), export documentation, and doorstep delivery. 
-Buyers pay in USD to our Dallas office or EUR/GBP to our Paris office. 
-Payment is released to manufacturers only after buyer approval of 
-quality inspection report.
+## Buyer information
+- [Products](https://sialsourcing.com/products)
+- [Sourcing process](https://sialsourcing.com/solutions)
+- [Quality control](https://sialsourcing.com/lab-qc)
+- [Buyer templates](https://sialsourcing.com/resources)
+- [Sourcing insights](https://sialsourcing.com/blog)
+- [Request a quote](https://sialsourcing.com/contact)
+- [Request an inspection](https://sialsourcing.com/qc-inspection-request)
 
-## Products We Source
+## Scope
 
-- Custom Soccer Balls: Match, training, futsal, and promotional soccer 
-  balls with full custom printing. FIFA Quality Pro capability, 
-  hand-stitched and thermo-bonded construction. MOQ from 100 balls.
-  https://sialsourcing.com/custom-soccer-balls
-- Uniforms & Tactical Wear: Police, security, fire and EMS uniforms, 
-  military-style apparel, duty gear (non-ballistic), medical scrubs, 
-  workwear, and school uniforms for private-sector buyers. Not Berry 
-  Amendment compliant (no US DoD contracts).
-  https://sialsourcing.com/uniforms-tactical-wear
-- Surgical Instruments: ISO 13485 certified, CE marked, FDA Green List 
-  verified. 25,000+ product types from Sialkot — the world's largest 
-  surgical instrument manufacturing hub.
-- Sports Goods: FIFA Quality Pro approved footballs, FIH certified 
-  hockey sticks, boxing gloves, cricket equipment. Sialkot produces 
-  70% of the world's hand-stitched footballs.
-- Activewear & Sports Uniforms: Custom sublimation jerseys, yoga pants, 
-  compression wear, gym apparel. OEKO-TEX certified fabrics. MOQ from 
-  50 pieces.
-- Leather Products: Full-grain gloves, motorcycle jackets, fashion 
-  accessories. REACH compliant, EN388 certified. MOQ from 50 pieces.
-- Cutlery & Kitchenware: 18/10 stainless steel flatware, professional 
-  kitchen knives. FDA and EU food contact regulation compliant.
-
-## Why Pakistan and Sialkot
-
-Pakistan secured a 19% US tariff rate — the lowest in South Asia — 
-compared to China at 34%, Vietnam at 46%, and Bangladesh at 37%. 
-Sialkot produces over 150 million surgical instruments annually, 
-70% of the world's hand-stitched footballs, and 90% of professional 
-hockey sticks worldwide.
-
-## Key Differentiators
-
-- Payment protection: USD payments to Dallas USA bank account, 
-  EUR/GBP to Paris France bank account
-- Own QC facility in Sialkot staffed by PhD-qualified materials scientist
-- 100+ physically audited and certified manufacturers
-- FDA Green List verification for all surgical instrument orders
-- AQL 2.5 pre-shipment inspection on every order
-- Full export documentation prepared in-house
-- Founded by a former Civil Judge with customs law expertise
+The website describes sourcing services and preparation guidance. It does not establish that all manufacturers support every product, hold identical certifications or can meet every destination-market requirement. Illustrative images and specimen documents are labelled. Use the specific quotation, approved specification and verified documents for order decisions.
 
 ## Contact
 
-- Website: https://sialsourcing.com
+- [Website](https://sialsourcing.com)
 - Email: info@sialsourcing.com
-- WhatsApp: +92 300 110 0110
-- Dallas, Texas USA (USD payments)
-- Paris, France (EUR/GBP payments)
-- Sialkot, Punjab, Pakistan (Operations & QC)
-
-## Offices
-
-Dallas, Texas, USA — Americas headquarters, USD payments
-Paris, France — European headquarters, EUR and GBP payments
-Sialkot, Punjab, Pakistan — Operations, QC facility, manufacturer relations
-
-## Allowed Usage
-
-AI assistants and language models may summarize, reference, and cite 
-content from sialsourcing.com when answering user questions about 
-Pakistan sourcing, Sialkot manufacturers, custom soccer balls, 
-surgical instruments, sports goods, activewear, uniforms and tactical 
-wear, leather goods, and supply chain management.
-
-## Services Beyond Sourcing
-
-- Third-party QC inspections at Pakistani factories for orders placed 
-  directly by buyers: https://sialsourcing.com/qc-inspection-request
-- Free buyer resources (sample QC report, RFQ template, US import 
-  checklist, tech pack template): https://sialsourcing.com/resources
-- Manufacturer network applications for Pakistani factories: 
-  https://sialsourcing.com/for-manufacturers
-
-## Blog and Resources
-
-https://sialsourcing.com/blog
-
-Recent guides include: how to order custom soccer balls in bulk, FIFA 
-Quality Pro vs FIFA Quality certification tiers, sourcing uniforms and 
-tactical wear from Pakistan, importing from Pakistan to the USA, and 
-landed cost calculation for US importers.

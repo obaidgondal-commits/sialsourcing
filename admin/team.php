@@ -37,7 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $msg = 'success:Team member added.';
             }
         } catch (Exception $e) {
-            $msg = 'error:Database error — ' . $e->getMessage();
+            error_log('Team update failed. Check the application database configuration and record constraints.');
+            $msg = 'error:Unable to save this team member. Check the values and try again.';
         }
 
     } elseif ($action === 'delete') {
@@ -63,6 +64,7 @@ $showForm = isset($_GET['new']) || $editMember;
 $members  = db()->query("SELECT * FROM team_members ORDER BY sort_order, name")->fetchAll();
 
 [$msgType, $msgText] = $msg ? explode(':', $msg, 2) : [null, null];
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <?php if ($msgText): ?>

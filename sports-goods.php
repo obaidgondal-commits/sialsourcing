@@ -1,5 +1,5 @@
 <?php
 $productSlug = 'sports-goods';
-$pageTitle = 'Sports Goods Manufacturer Sialkot — FIFA Approved Footballs, Hockey, Boxing | SialSourcing';
-$pageDesc    = 'FIFA approved footballs, hockey sticks, boxing gloves and cricket equipment from Sialkot. Fairtrade certified, BSCI audited manufacturers.';
+$pageTitle = 'Sports Goods Sourcing from Sialkot';
+$pageDesc = 'Explore sports goods sourcing from Sialkot. Prepare your product brief, branding requirements, quantities and quality criteria with SialSourcing.';
 require __DIR__ . '/product-template.php';

@@ -55,70 +55,39 @@ $productImage  = !empty($product['image'])          ? $product['image']         
 
 // SEO contract for header.php — wrapper-set values win
 $pageTitle     = $pageTitle ?? $product['title'] . ' from Sialkot, Pakistan';
-$pageDesc      = $pageDesc ?? (!empty($product['meta_desc']) ? $product['meta_desc'] : $product['description']);
+$pageDesc      = !empty($product['meta_desc']) ? $product['meta_desc'] : ($pageDesc ?? $product['description']);
+$productRegion = $product['slug'] === 'cutlery' ? 'Wazirabad' : 'Sialkot';
 $canonicalPath = '/' . $product['slug'];
 if (!empty($product['image'])) $ogImage = $product['image'];
 
 require_once __DIR__ . '/includes/header.php';
 
-// Honest structured data: no invented prices or ratings — factual
-// product identity plus MOQ/lead time as properties.
+// Category identity and sourcing service, not an individual manufactured item.
 $productSchema = [
-    '@context'        => 'https://schema.org',
-    '@type'           => 'Product',
-    'name'            => $product['title'],
-    'description'     => $product['description'],
-    'image'           => $productImage,
-    'url'             => SITE_URL . '/' . $product['slug'],
-    'brand'           => ['@type' => 'Brand', 'name' => 'SialSourcing'],
-    'countryOfOrigin' => ['@type' => 'Country', 'name' => 'Pakistan'],
-    'manufacturer'    => [
-        '@type'   => 'Organization',
-        'name'    => 'SialSourcing',
-        'url'     => 'https://sialsourcing.com',
-        'address' => [
-            '@type'           => 'PostalAddress',
-            'addressLocality' => 'Sialkot',
-            'addressRegion'   => 'Punjab',
-            'addressCountry'  => 'PK',
-        ],
-    ],
-    'additionalProperty' => [
-        ['@type' => 'PropertyValue', 'name' => 'Minimum Order Quantity', 'value' => $moq],
-        ['@type' => 'PropertyValue', 'name' => 'Lead Time', 'value' => $leadTime],
-    ],
+    '@context' => 'https://schema.org', '@type' => 'CollectionPage',
+    'name' => $product['title'], 'description' => $product['description'],
+    'url' => $canonicalUrl,
+    'about' => ['@type'=>'Service','name'=>$product['title'].' sourcing',
+        'serviceType'=>'Product sourcing and supply chain coordination',
+        'provider'=>['@id'=>$canonicalOrigin.'/#organization']],
 ];
 
 $crumbs = [
-    ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => SITE_URL . '/'],
-    ['@type' => 'ListItem', 'position' => 2, 'name' => 'Products', 'item' => SITE_URL . '/products'],
+    ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => $canonicalOrigin . '/'],
+    ['@type' => 'ListItem', 'position' => 2, 'name' => 'Products', 'item' => $canonicalOrigin . '/products'],
 ];
 if ($parentRow) {
-    $crumbs[] = ['@type' => 'ListItem', 'position' => 3, 'name' => $parentRow['title'], 'item' => SITE_URL . '/' . $parentRow['slug']];
+    $crumbs[] = ['@type' => 'ListItem', 'position' => 3, 'name' => $parentRow['title'], 'item' => $canonicalOrigin . '/' . $parentRow['slug']];
 }
-$crumbs[] = ['@type' => 'ListItem', 'position' => count($crumbs) + 1, 'name' => $product['title'], 'item' => SITE_URL . '/' . $product['slug']];
+$crumbs[] = ['@type' => 'ListItem', 'position' => count($crumbs) + 1, 'name' => $product['title'], 'item' => $canonicalOrigin . '/' . $product['slug']];
 $breadcrumbSchema = [
     '@context'        => 'https://schema.org',
     '@type'           => 'BreadcrumbList',
     'itemListElement' => $crumbs,
 ];
 ?>
-<script type="application/ld+json"><?= json_encode($productSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script>
-<script type="application/ld+json"><?= json_encode($breadcrumbSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script>
-<?php if (!empty($faqs)):
-$faqSchema = [
-    '@context'   => 'https://schema.org',
-    '@type'      => 'FAQPage',
-    'mainEntity' => array_map(fn($f) => [
-        '@type'          => 'Question',
-        'name'           => $f['question'],
-        'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f['answer']],
-    ], $faqs),
-];
-?>
-<script type="application/ld+json"><?= json_encode($faqSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script>
-<?php endif; ?>
-
+<script type="application/ld+json"><?= json_encode($productSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
+<script type="application/ld+json"><?= json_encode($breadcrumbSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
 <!-- ═══ HERO ═══ -->
 <section class="pp-hero">
   <div class="pp-hero-left reveal-left">
@@ -135,7 +104,7 @@ $faqSchema = [
     <?php endif; ?>
 
     <div class="pp-hero-actions">
-      <a href="/contact" class="btn-primary">Get a Free Quote</a>
+      <a href="/contact?product=<?= e($product['slug']) ?>" class="btn-primary">Discuss this product</a>
       <a href="/lab-qc" class="btn-outline-light">Our QC Process</a>
     </div>
 
@@ -150,11 +119,11 @@ $faqSchema = [
       </div>
       <div class="pp-meta-item">
         <div class="pp-meta-label">Payment</div>
-        <div class="pp-meta-value">USD · EUR · GBP</div>
+        <div class="pp-meta-value">Agreed in quotation</div>
       </div>
       <div class="pp-meta-item">
         <div class="pp-meta-label">Inspection</div>
-        <div class="pp-meta-value">AQL 2.5</div>
+        <div class="pp-meta-value">Product-specific plan</div>
       </div>
     </div>
   </div>
@@ -162,11 +131,11 @@ $faqSchema = [
   <div class="pp-hero-right">
     <?php if (!empty($product['image'])): ?>
       <img src="<?= e($product['image']) ?>"
-           alt="<?= e($product['title']) ?> from Sialkot Pakistan"
+           alt="<?= e($product['title']) ?> from <?= e($productRegion) ?> Pakistan"
            loading="eager">
       <div class="pp-hero-right-overlay"></div>
     <?php else: ?>
-      <div class="pp-hero-ph"><?= icon($product['icon'] ?: 'box', 190, 'pp-hero-ph-icon') ?></div>
+      <div class="category-brief"><p class="eyebrow">A better starting point</p><h2>Your product.<br>Your specification.</h2><dl><div><dt>Sourcing region</dt><dd><?= e($productRegion) ?>, Pakistan</dd></div><div><dt>Order quantity</dt><dd><?= e($moq) ?></dd></div><div><dt>Production schedule</dt><dd><?= e($leadTime) ?></dd></div></dl><p>Supplier capability and commercial terms are confirmed against your brief.</p></div>
     <?php endif; ?>
   </div>
 </section>
@@ -176,7 +145,7 @@ $faqSchema = [
   <div class="pp-content-inner">
 
     <div class="pp-content-left reveal-left">
-      <h2>World-Class <?= e($product['title']) ?> from Sialkot</h2>
+      <h2>Sourcing <?= e($product['title']) ?> from <?= e($productRegion) ?></h2>
       <div class="pp-content-text">
         <?php if (!empty($product['details'])): ?>
           <?= $product['details'] ?>
@@ -206,15 +175,12 @@ $faqSchema = [
       <?php elseif (!empty($product['image'])): ?>
       <div class="pp-gallery">
         <img src="<?= e($product['image']) ?>"
-             alt="<?= e($product['title']) ?> from Sialkot Pakistan"
+             alt="<?= e($product['title']) ?> from <?= e($productRegion) ?> Pakistan"
              loading="lazy"
              style="grid-column:span 2;aspect-ratio:16/9;">
       </div>
       <?php else: ?>
-      <div class="card-placeholder" style="aspect-ratio:4/3;border-radius:12px;">
-        <?= icon($product['icon'] ?: 'box', 64) ?>
-        <span>Product photography coming soon</span>
-      </div>
+      <aside class="sourcing-checklist"><h3>Prepare your product brief</h3><ul><li>Product pattern or reference</li><li>Materials, dimensions and finish</li><li>Quantity and packaging</li><li>Destination market and intended use</li><li>Required documentation and delivery date</li></ul><a class="text-link" href="/resources">Buyer templates</a></aside>
       <?php endif; ?>
     </div>
 
@@ -240,7 +206,7 @@ $faqSchema = [
 
       <?php if (!empty($certs)): ?>
       <div class="pp-spec-card reveal">
-        <div class="pp-spec-label">Certifications</div>
+        <div class="pp-spec-label">Market requirements to verify</div>
         <div class="pp-spec-value"><?= e(implode(' · ', $certs)) ?></div>
       </div>
       <?php endif; ?>
@@ -264,17 +230,17 @@ $faqSchema = [
 
       <div class="pp-spec-card reveal">
         <div class="pp-spec-label">Quality Inspection</div>
-        <div class="pp-spec-value">AQL 2.5 pre-shipment inspection on every order</div>
+        <div class="pp-spec-value">Sampling and acceptance criteria agreed for the product</div>
       </div>
 
       <div class="pp-spec-card reveal">
         <div class="pp-spec-label">Payment Options</div>
-        <div class="pp-spec-value">USD to Dallas · EUR/GBP to Paris</div>
+        <div class="pp-spec-value">Currency, payment schedule and contracting entity confirmed in your quotation</div>
       </div>
 
       <div class="pp-spec-card reveal">
         <div class="pp-spec-label">Origin</div>
-        <div class="pp-spec-value">Sialkot, Punjab, Pakistan</div>
+        <div class="pp-spec-value"><?= e($productRegion) ?>, Punjab, Pakistan</div>
       </div>
 
       <div class="pp-spec-card reveal">
@@ -293,7 +259,7 @@ $faqSchema = [
     <h2>Frequently Asked Questions</h2>
     <?php foreach ($faqs as $f): ?>
     <div class="faq-item">
-      <button class="faq-q"><?= e($f['question']) ?></button>
+      <h3 class="faq-q"><?= e($f['question']) ?></h3>
       <div class="faq-a"><?= nl2br(e($f['answer'])) ?></div>
     </div>
     <?php endforeach; ?>
@@ -323,9 +289,9 @@ $faqSchema = [
 <!-- ═══ CTA ═══ -->
 <section class="pp-cta">
   <h2>Ready to Source <em style="color:var(--gold);font-style:normal;"><?= e($product['title']) ?></em>?</h2>
-  <p>Tell us what you need. Within 24 hours you will have a manufacturer shortlist, compliance overview, and indicative pricing — at no cost and no obligation.</p>
+  <p>Share your specification, quantity and destination. We will review the brief and confirm the quotation and sampling steps.</p>
   <div class="pp-cta-actions">
-    <a href="/contact?product=<?= e($product['slug']) ?>" class="btn-primary">Get a Free Sourcing Plan</a>
+    <a href="/contact?product=<?= e($product['slug']) ?>" class="btn-primary">Send your sourcing brief</a>
     <a href="mailto:info@sialsourcing.com" class="btn-outline-light">Email Us Directly</a>
   </div>
 </section>

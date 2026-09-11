@@ -1,5 +1,5 @@
 <?php
 $productSlug = 'surgical-instruments';
-$pageTitle = 'Surgical Instruments Supplier Pakistan — ISO 13485, CE Marked, FDA Registered | SialSourcing';
-$pageDesc    = 'Source CE-marked, ISO 13485 certified surgical instruments from verified Sialkot manufacturers. FDA registered, full QC inspection before shipment.';
+$pageTitle = 'Surgical Instruments Sourcing from Sialkot';
+$pageDesc = 'Source surgical instruments from Sialkot with a clear product specification, sample review, supplier documentation and a product-specific inspection plan.';
 require __DIR__ . '/product-template.php';

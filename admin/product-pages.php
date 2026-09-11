@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($slug) {
-        header("Location: product-pages.php?slug=" . urlencode($slug) . "&saved=" . urlencode($msg));
+        header("Location: product-pages.php?slug=" . urlencode($slug) . "&saved=" . urlencode($msg), true, 303);
         exit;
     }
 }
@@ -94,6 +94,7 @@ if ($slug) {
 }
 
 [$msgType,$msgText] = $msg ? explode(':',$msg,2) : [null,null];
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <?php if ($msgText): ?>

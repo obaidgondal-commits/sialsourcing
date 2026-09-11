@@ -21,6 +21,7 @@ $showForm = isset($_GET['new']) || $editItem;
 $items    = db()->query("SELECT * FROM lab_tests ORDER BY sort_order")->fetchAll();
 [$mt,$mx] = $msg ? explode(':',$msg,2) : [null,null];
 $icons = ['flask','zap','thermometer','shield','layers','activity','check-square','clipboard','eye','check-circle'];
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <?php if ($mx): ?><div class="alert alert-<?= $mt==='success'?'success':'error' ?>"><?= e($mx) ?></div><?php endif; ?>

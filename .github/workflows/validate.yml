@@ -1,0 +1,45 @@
+name: Validate website
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out reviewed source
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install PHP validation dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y php-cli php-sqlite3 php-gd php-xml
+      - name: Validate and build public release
+        run: python3 scripts/package-release.py
+      - name: Verify local schema and configuration
+        run: |
+          php scripts/setup-preview.php --local
+          php -r 'require "config.php"; if (APP_ENV !== "local" || db()->query("SELECT COUNT(*) FROM products")->fetchColumn() < 11 || db()->query("SELECT COUNT(*) FROM admin_users")->fetchColumn() != 0) { exit(1); } if (send_notification("test@example.invalid", "CI", "Local only")) { exit(1); } echo "Local database contract passed.\n";'
+      - name: Verify isolated website and form flows
+        run: python3 scripts/verify-site.py
+      - name: Retain reviewed package and manifest
+        uses: actions/upload-artifact@v7
+        with:
+          name: sialsourcing-public-release
+          path: |
+            .preview/releases/*.zip
+            .preview/releases/*.manifest.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14

@@ -1,3 +1,8 @@
+HISTORICAL REFERENCE — superseded for this release.
+Use README.md and docs/HOSTINGER-DEPLOYMENT.md for deployment,
+and docs/EXPANSION-REVIEW.md for current SEO and expansion decisions.
+The original notes below contain unverified claims and old procedures.
+
 ================================================================
 SIALSOURCING — OFF-SITE SEO ACTION PLAN (owner tasks)
 The on-page work is done. These items need your accounts/identity

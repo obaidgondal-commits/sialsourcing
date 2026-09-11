@@ -2,6 +2,22 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  // Category discovery enhances a fully server-rendered, crawlable list.
+  const categorySearch = document.getElementById('category-search');
+  if (categorySearch) {
+    const cards = [...document.querySelectorAll('[data-category-search]')];
+    categorySearch.addEventListener('input', () => {
+      const query = categorySearch.value.trim().toLocaleLowerCase();
+      let count = 0;
+      for (const card of cards) {
+        card.hidden = !card.dataset.categorySearch.includes(query);
+        if (!card.hidden) count++;
+      }
+      document.getElementById('category-count').textContent = `${count} sourcing ${count === 1 ? 'category' : 'categories'}`;
+      document.getElementById('category-empty').hidden = count !== 0;
+    });
+  }
+
   // ---- Navbar scroll effect ----
   const nav = document.querySelector('.nav');
   window.addEventListener('scroll', () => {
@@ -41,7 +57,14 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
-  // ↑ hamburger if block closes HERE — everything below is independent
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && navLinks?.classList.contains('open')) {
+      navLinks.classList.remove('open');
+      hamburger?.setAttribute('aria-expanded', 'false');
+      hamburger?.focus();
+    }
+  });
+  // Navigation remains independent of optional page enhancements.
 
   // ---- Scroll reveal (Intersection Observer) ----
   const revealEls = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
@@ -86,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const counters = document.querySelectorAll('[data-count]');
-  if (counters.length > 0) {
+  if (counters.length > 0 && 'IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const counterObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -97,16 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { threshold: 0.5 });
     counters.forEach(el => counterObserver.observe(el));
   }
-
-  // ---- FAQ accordion ----
-  document.querySelectorAll('.faq-q').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const item = btn.closest('.faq-item');
-      const isOpen = item.classList.contains('open');
-      document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
-      if (!isOpen) item.classList.add('open');
-    });
-  });
 
   // ---- Lab tabs filter ----
   const tabs = document.querySelectorAll('.lab-tab');
@@ -127,7 +140,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---- Smooth anchor links ----
   document.querySelectorAll('a[href^="#"]').forEach(link => {
     link.addEventListener('click', e => {
-      const target = document.querySelector(link.getAttribute('href'));
+      const hash = link.getAttribute('href');
+      const target = hash && hash.length > 1 ? document.getElementById(decodeURIComponent(hash.slice(1))) : null;
       if (target) {
         e.preventDefault();
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });

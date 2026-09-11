@@ -1,15 +1,23 @@
 <?php
 require_once __DIR__ . '/../config.php';
+header('Cache-Control: no-store, private');
+header('X-Robots-Tag: noindex, nofollow');
 
 $error  = '';
 $notice = isset($_GET['timeout']) ? 'Your session timed out. Please sign in again.' : '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_ok()) {
         $error = 'Your session expired — please try again.';
+    } elseif (!is_string($_POST['username'] ?? '') || !is_string($_POST['password'] ?? '')) {
+        $error = 'Invalid username or password.';
+    } elseif (!rate_limit('admin-login:' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 10, 900)) {
+        http_response_code(429);
+        header('Retry-After: 900');
+        $error = 'Too many sign-in attempts. Please wait 15 minutes and try again.';
     } else {
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
-        if ($username && $password) {
+        if ($username && $password && strlen($username) <= 200 && strlen($password) <= 4096) {
             $stmt = db()->prepare("SELECT * FROM admin_users WHERE username = ?");
             $stmt->execute([$username]);
             $user = $stmt->fetch();
@@ -18,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['admin_logged_in'] = true;
                 $_SESSION['admin_user'] = $user['username'];
                 $_SESSION['admin_last_seen'] = time();
-                header('Location: dashboard.php');
+                header('Location: dashboard.php', true, 303);
                 exit;
             }
         }

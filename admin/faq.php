@@ -35,6 +35,7 @@ if (isset($_GET['edit'])) {
 $showForm = isset($_GET['new']) || $editItem;
 $faqs     = db()->query("SELECT * FROM faqs ORDER BY sort_order,created_at DESC")->fetchAll();
 [$msgType,$msgText] = $msg ? explode(':', $msg, 2) : [null,null];
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <?php if ($msgText): ?>

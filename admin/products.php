@@ -48,6 +48,7 @@ $items    = db()->query("SELECT * FROM products ORDER BY sort_order")->fetchAll(
 [$msgType,$msgText] = $msg ? explode(':',$msg,2) : [null,null];
 
 $icons = ['box','scissors','activity','briefcase','tool','shield','zap','globe','layers','cpu','target','award','soccer-ball'];
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <?php if ($msgText): ?>
