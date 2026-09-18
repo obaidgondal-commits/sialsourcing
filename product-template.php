@@ -232,7 +232,11 @@ $faqSchema = [
   <?php endif; ?>
 </section>
 
-<!-- ═══ SPECS ═══ -->
+<?php
+if (in_array($productSlug ?? '', ['surgical-instruments', 'dental-instruments'], true)) {
+    require __DIR__ . '/includes/instrument-catalogue-section.php';
+}
+?><!-- ═══ SPECS ═══ -->
 <section class="pp-specs">
   <div class="pp-specs-inner">
     <h2>Product Specifications</h2>

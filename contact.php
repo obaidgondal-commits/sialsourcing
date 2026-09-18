@@ -2,7 +2,8 @@
 $pageTitle     = 'Get a Free Sourcing Quote — Pakistan Manufacturer Vetting & Supply Chain | SialSourcing';
 $pageDesc      = 'Tell us what you are sourcing and get a manufacturer shortlist, compliance overview, and indicative pricing within 24 hours. Free, no obligation.';
 $canonicalPath = '/contact';
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/includes/instrument-data.php';
 
 $subjects = [
     'Custom Soccer Balls',
@@ -18,23 +19,54 @@ $subjects = [
 
 // Preselect the subject when arriving from a product page (/contact?product=slug)
 $preselect = '';
-if (!empty($_GET['product'])) {
+if (is_string($_GET['product'] ?? null) && $_GET['product'] !== '') {
     $st = db()->prepare("SELECT title FROM products WHERE slug=? AND is_active=1");
     $st->execute([trim($_GET['product'])]);
     $preselect = $st->fetchColumn() ?: '';
+    if ($preselect !== '' && in_array($_GET['product'], ['dental-instruments', 'surgical-instruments'], true)) {
+        $preselect = 'Surgical Instruments';
+    }
 }
 
 $success = false;
 $error   = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name    = trim($_POST['name'] ?? '');
-    $email   = trim($_POST['email'] ?? '');
-    $company = trim($_POST['company'] ?? '');
-    $phone   = trim($_POST['phone'] ?? '');
-    $subject = trim($_POST['subject'] ?? '');
-    $message = trim($_POST['message'] ?? '');
+$selection = null;
+$prefill = '';
+$postedValue = static fn ($key) => is_string($_POST[$key] ?? '') ? ($_POST[$key] ?? '') : '';
+$postedText = static fn ($key) => trim($postedValue($key));
+$isPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
+$selectionInput = $isPost ? $_POST : $_GET;
+if (array_key_exists('family', $selectionInput) || array_key_exists('skus', $selectionInput)) {
+    try {
+        $selection = instrument_selected_products($selectionInput['family'] ?? null, $selectionInput['skus'] ?? null);
+        $preselect = 'Surgical Instruments';
+        $prefill = instrument_enquiry_prefix($selection) . "Quantities and requirements:\n";
+    } catch (InvalidArgumentException $invalidSelection) {
+        $error = $invalidSelection->getMessage();
+        http_response_code(422);
+    }
+}
+if ($isPost) {
+    $name    = $postedText('name');
+    $email   = $postedText('email');
+    $company = $postedText('company');
+    $phone   = $postedText('phone');
+    $subject = $selection ? 'Surgical Instruments' : $postedText('subject');
+    $message = $postedText('message');
+    $malformedFields = array_filter(['name', 'email', 'company', 'phone', 'subject', 'message'],
+        static fn ($key) => isset($_POST[$key]) && !is_string($_POST[$key]));
+    if ($selection) {
+        $prefix = instrument_enquiry_prefix($selection);
+        if (!str_starts_with($message, $prefix)) {
+            $message = $prefix . $message;
+        }
+    }
 
-    if (!empty($_POST['website'])) {
+    if ($error !== '') {
+        // Invalid catalogue references must never reach the CMS inbox or mail.
+    } elseif ($malformedFields) {
+        $error = 'Please enter valid text in the contact fields.';
+    } elseif (!empty($_POST['website'])) {
         // Honeypot tripped — pretend success, store nothing
         $success = true;
     } elseif (!csrf_ok()) {
@@ -57,12 +89,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $body     = "New enquiry via sialsourcing.com\n\n"
                   . "Name: $safeName\nEmail: $safeMail\nCompany: $company\nPhone: $phone\nSourcing: $subject\n\n$message";
         $headers  = "From: SialSourcing Website <no-reply@sialsourcing.com>\r\nReply-To: $safeMail";
-        if (!@mail($to, 'New Enquiry: ' . ($subject ?: 'General'), $body, $headers)) {
+        if (!instrument_is_staging() && !@mail($to, 'New Enquiry: ' . ($subject ?: 'General'), $body, $headers)) {
             error_log('contact.php: mail() failed for enquiry from ' . $safeMail);
         }
         $success = true;
     }
 }
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <div style="padding-top:100px;min-height:100vh;background:var(--cream);">
@@ -97,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div style="background:#dcfce7;border:1px solid #86efac;border-radius:var(--radius);padding:2rem;text-align:center;">
           <div style="color:#16a34a;margin-bottom:1rem;"><?= icon('check-circle', 44) ?></div>
           <h3 style="color:#166534;margin-bottom:0.5rem;">Enquiry Received!</h3>
-          <p style="color:#16a34a;">Thank you. We'll get back to you within 24 hours.</p>
+          <p style="color:#16a34a;"><?= instrument_is_staging() ? 'Test enquiry saved in staging. No email was sent.' : "Thank you. We'll get back to you within 24 hours." ?></p>
         </div>
       <?php else: ?>
         <div style="background:var(--white);border-radius:var(--radius);padding:2.5rem;box-shadow:0 4px 30px rgba(0,0,0,0.06);border:1px solid var(--cream-dark);">
@@ -106,29 +139,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <?php endif; ?>
           <form method="post" action="/contact">
             <?= csrf_field() ?>
+<?php if ($selection): ?>
+            <input type="hidden" name="family" value="<?= e($selection['family']['code']) ?>">
+<?php foreach ($selection['skus'] as $selectedSku): ?>
+            <input type="hidden" name="skus[]" value="<?= e($selectedSku) ?>">
+<?php endforeach; ?>
+<?php endif; ?>
             <input type="text" name="website" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
             <div class="form-fields-grid">
               <div class="field">
                 <label class="field-label">Full Name *</label>
-                <input class="field-input" type="text" name="name" required maxlength="200" placeholder="John Smith" value="<?= e($_POST['name'] ?? '') ?>">
+                <input class="field-input" type="text" name="name" required maxlength="200" placeholder="John Smith" value="<?= e($postedValue('name')) ?>">
               </div>
               <div class="field">
                 <label class="field-label">Email *</label>
-                <input class="field-input" type="email" name="email" required maxlength="200" placeholder="john@company.com" value="<?= e($_POST['email'] ?? '') ?>">
+                <input class="field-input" type="email" name="email" required maxlength="200" placeholder="john@company.com" value="<?= e($postedValue('email')) ?>">
               </div>
               <div class="field">
                 <label class="field-label">Company</label>
-                <input class="field-input" type="text" name="company" maxlength="200" placeholder="Your Company" value="<?= e($_POST['company'] ?? '') ?>">
+                <input class="field-input" type="text" name="company" maxlength="200" placeholder="Your Company" value="<?= e($postedValue('company')) ?>">
               </div>
               <div class="field">
                 <label class="field-label">Phone / WhatsApp</label>
-                <input class="field-input" type="text" name="phone" maxlength="50" placeholder="+1 555 000 0000" value="<?= e($_POST['phone'] ?? '') ?>">
+                <input class="field-input" type="text" name="phone" maxlength="50" placeholder="+1 555 000 0000" value="<?= e($postedValue('phone')) ?>">
               </div>
             </div>
             <div class="field" style="margin-bottom:1rem;">
               <label class="field-label">What are you sourcing?</label>
               <select class="field-input" name="subject" style="background:#fff;">
-                <?php $sel = $_POST['subject'] ?? $preselect; ?>
+                <?php $sel = $selection ? 'Surgical Instruments' : ($_POST['subject'] ?? $preselect); ?>
                 <?php foreach ($subjects as $s): ?>
                 <option <?= $sel === $s ? 'selected' : '' ?>><?= e($s) ?></option>
                 <?php endforeach; ?>
@@ -136,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="field" style="margin-bottom:1.5rem;">
               <label class="field-label">Message / Requirements *</label>
-              <textarea class="field-input" name="message" required maxlength="5000" rows="5" placeholder="Tell us about your product requirements, quantities, target price, and any certifications needed..."><?= e($_POST['message'] ?? '') ?></textarea>
+              <textarea class="field-input" name="message" required maxlength="5000" rows="5" placeholder="Tell us about your product requirements, quantities, target price, and any certifications needed..."><?= e(is_string($_POST['message'] ?? null) ? $_POST['message'] : $prefill) ?></textarea>
             </div>
             <button type="submit" class="btn btn-gold" style="width:100%;justify-content:center;">Send Enquiry <?= icon('send', 17) ?></button>
           </form>

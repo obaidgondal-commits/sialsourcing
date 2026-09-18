@@ -7,6 +7,9 @@ Options -Indexes
 ErrorDocument 404 /404.php
 
 # ---- Protect sensitive files ----
+<FilesMatch "^(config(?:\.example)?\.php|README\.md)$">
+  Require all denied
+</FilesMatch>
 <Files "config.php">
   Require all denied
 </Files>
@@ -54,6 +57,11 @@ RewriteRule ^products/([a-z0-9-]+)/?$ /$1 [R=301,L]
 RewriteRule ^sitemap\.xml$ sitemap.php [L]
 
 # 6) Internal rewrites — the URL bar stays clean
+#    Instrument details extend the existing surgical and dental category pages.
+#    The controller reads route identity from REQUEST_URI and keeps GET filters.
+RewriteRule ^(surgical-instruments|dental-instruments)/([a-z0-9-]+)/([a-z0-9-]+)$ instrument-catalogue.php [END,QSA]
+RewriteRule ^(surgical-instruments|dental-instruments)/([a-z0-9-]+)$ instrument-catalogue.php [END,QSA]
+
 #    Blog posts: /blog/{slug}
 RewriteRule ^blog/([a-zA-Z0-9-]+)$ blog-single.php?slug=$1 [L,QSA]
 
@@ -63,7 +71,7 @@ RewriteRule ^blog/([a-zA-Z0-9-]+)$ blog-single.php?slug=$1 [L,QSA]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.php -f
-RewriteCond $1 !^(config|index|product-template|blog-single|sitemap|default)$
+RewriteCond $1 !^(config|index|product-template|instrument-catalogue|blog-single|sitemap|default)$
 RewriteRule ^([a-z0-9-]+)$ $1.php [L]
 </IfModule>
 

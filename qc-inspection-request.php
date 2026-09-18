@@ -34,8 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ->execute([$name,$email,$company,$phone,'QC Inspection Request',$message]);
         $to       = setting('contact_email', 'info@sialsourcing.com');
         $safeMail = str_replace(["\r", "\n"], '', $email);
-        @mail($to, 'New QC Inspection Request', "From: $name <$safeMail>\nCompany: $company\nPhone: $phone\n\n$message",
+        if (!defined('SIAL_STAGING') || !SIAL_STAGING) {
+            @mail($to, 'New QC Inspection Request', "From: $name <$safeMail>\nCompany: $company\nPhone: $phone\n\n$message",
               "From: SialSourcing Website <no-reply@sialsourcing.com>\r\nReply-To: $safeMail");
+        }
         $success = true;
     }
 }

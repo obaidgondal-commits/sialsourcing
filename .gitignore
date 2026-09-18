@@ -1,5 +1,16 @@
 config.php
 *.sql
+!database/schema.sql
+!database/public-content.sql
 public_html
 error_log
 .env
+.env.*
+!.env.example
+.runtime/
+.preview/
+__pycache__/
+*.sqlite
+*.sqlite-*
+*.zip
+*.log
