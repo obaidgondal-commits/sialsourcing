@@ -34,7 +34,7 @@ if (!str_starts_with($path, '/') || preg_match('/[\x00-\x1F\x7F\\\\]/', $path)
 // Explicit routes and static extensions prevent private JSON, SQLite, source,
 // scripts, tests, configuration, direct includes and admin from being served.
 $firstSegment = explode('/', trim($path, '/'))[0] ?? '';
-if (in_array(strtolower($firstSegment), ['admin', 'includes', 'scripts', 'tests', 'data', 'private', 'catalogue', 'config.php', 'config.example.php'], true)) {
+if (in_array(strtolower($firstSegment), ['admin', 'includes', 'scripts', 'tests', 'data', 'docs', 'private', 'catalogue', 'config.php', 'config.example.php'], true)) {
     http_response_code(404);
     exit('Not found.');
 }
@@ -44,7 +44,7 @@ if ($path === '/robots.txt') {
     return true;
 }
 
-if (preg_match('~\A/(?:assets/(?:css|js|docs)/[a-zA-Z0-9_.-]+\.(?:css|js|pdf)|uploads/(?:blog|products|team)/[a-zA-Z0-9_.-]+\.(?:jpe?g|png|webp|gif)|(?:favicon\.(?:png|webp)|sialsourcing-(?:logo\.png|icon\.webp)|og-image\.jpg))\z~D', $path)) {
+if (preg_match('~\A/(?:assets/(?:css|js|docs)/[a-zA-Z0-9_.-]+\.(?:css|js|pdf)|uploads/(?:blog|products|team|instruments)/[a-zA-Z0-9_.-]+\.(?:jpe?g|png|webp|gif)|(?:favicon\.(?:png|webp)|sialsourcing-(?:logo\.png|icon\.webp)|og-image\.jpg))\z~D', $path)) {
     $file = realpath($documentRoot . $path);
     if ($file !== false && str_starts_with($file, $documentRoot . '/') && is_file($file)) {
         $types = ['css' => 'text/css; charset=utf-8', 'js' => 'application/javascript; charset=utf-8', 'pdf' => 'application/pdf', 'png' => 'image/png', 'webp' => 'image/webp', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'gif' => 'image/gif'];
@@ -59,6 +59,10 @@ if (preg_match('~\A/(?:assets/(?:css|js|docs)/[a-zA-Z0-9_.-]+\.(?:css|js|pdf)|up
     exit('Not found.');
 }
 
+if (preg_match('~\A/knowledge-base(?:/[a-z0-9]+(?:-[a-z0-9]+)*)?/?\z~D', $path)) {
+    require $documentRoot . '/knowledge-base.php';
+    return true;
+}
 if (preg_match('~\A/(dental-instruments|surgical-instruments)/([a-z0-9]+(?:-[a-z0-9]+)*)(?:/([a-z0-9]+(?:-[a-z0-9]+)*))?/?\z~D', $path, $route)) {
     // Route identity wins over conflicting user query fields; search/filter
     // parameters remain available to the catalogue controller.

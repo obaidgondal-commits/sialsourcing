@@ -42,5 +42,12 @@ foreach ($posts as $p): ?>
     <lastmod><?= date('Y-m-d', strtotime($p['lastmod'] ?? 'now')) ?></lastmod>
     <priority>0.6</priority>
   </url>
-<?php endforeach; ?>
+<?php endforeach;
+require_once __DIR__ . '/includes/knowledge-base.php';
+$publishedGuides = knowledge_articles();
+if ($publishedGuides): ?>
+  <url><loc>https://sialsourcing.com/knowledge-base</loc><priority>0.7</priority></url>
+<?php foreach ($publishedGuides as $slug => $guide): ?>
+  <url><loc>https://sialsourcing.com/knowledge-base/<?= htmlspecialchars($slug) ?></loc><lastmod><?= htmlspecialchars($guide['reviewed_on']) ?></lastmod><priority>0.6</priority></url>
+<?php endforeach; endif; ?>
 </urlset>

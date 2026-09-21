@@ -16,6 +16,7 @@ def main():
     parser.add_argument('--auth-config', required=True, type=Path, help='Existing private preview config; reuses its password hash.')
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--origin', required=True)
+    parser.add_argument('--media-manifest', type=Path, help='Optional private approved-photo manifest; never stored in public_html.')
     args = parser.parse_args()
     if not re.fullmatch(r'https://[a-z0-9][a-z0-9.-]+', args.origin):
         parser.error('Provide an HTTPS staging origin without a trailing slash.')
@@ -25,6 +26,12 @@ def main():
     catalogue = json.loads(args.catalogue.read_text())
     if catalogue.get('schema_version') != 1 or catalogue.get('mode') not in ('published', 'staging-preview'):
         parser.error('Use a valid public-field catalogue export.')
+    if args.media_manifest:
+        if args.media_manifest.resolve().is_relative_to(ROOT) or args.media_manifest.stat().st_size > 2_000_000:
+            parser.error('Media manifest must be a private file outside the website source root, at most 2 MB.')
+        media = json.loads(args.media_manifest.read_text())
+        if not isinstance(media, dict) or media.get('schema_version') != 1 or not isinstance(media.get('images'), list):
+            parser.error('Use a schema version 1 image manifest.')
     auth = args.auth_config.read_text()
     hashed = re.search(r"'CATALOGUE_STAGE_PASSWORD_HASH'\s*=>\s*'([^']+)'", auth)
     user = re.search(r"'CATALOGUE_STAGE_USER'\s*=>\s*'([^']+)'", auth)
@@ -47,6 +54,9 @@ def main():
     subprocess.run(['python3', str(ROOT / 'scripts/setup-preview.py'), '--output', str(private / 'cms.sqlite'), '--site-url', args.origin], check=True)
     shutil.copy2(args.catalogue, private / 'catalogue.json')
     (private / 'catalogue.json').chmod(0o600)
+    if args.media_manifest:
+        shutil.copy2(args.media_manifest, private / 'instrument-media.json')
+        (private / 'instrument-media.json').chmod(0o600)
     (private / '.htaccess').write_text('Require all denied\n')
     (public / 'robots.txt').write_text('User-agent: *\nDisallow: /\n')
     original = (public / '.htaccess').read_text()
@@ -59,7 +69,7 @@ RewriteRule ^(.*)$ https://sialsourcing.com/$1 [R=301,L]'''
 RewriteCond %{HTTPS} !=on
 RewriteRule ^ - [F,L]''')
     original = original.replace('RewriteEngine On', '''RewriteEngine On
-RewriteRule ^(?:admin|includes|data|database|scripts|tests)(?:/|$) - [F,L]
+RewriteRule ^(?:admin|includes|data|database|scripts|tests|docs)(?:/|$) - [F,L]
 RewriteRule ^catalogue(?:/.*)?$ /surgical-instruments [R=302,L]''', 1)
     original += '''
 <IfModule mod_headers.c>
@@ -96,6 +106,9 @@ putenv('SIAL_SITE_URL=' . $stage['origin']);
 putenv('SIAL_CMS_FILE=' . dirname(__DIR__) . '/full-site-private/cms.sqlite');
 putenv('SIAL_SESSION_DIR=' . dirname(__DIR__) . '/full-site-private/sessions');
 putenv('SIAL_CATALOGUE_FILE=' . dirname(__DIR__) . '/full-site-private/catalogue.json');
+if (is_file(dirname(__DIR__) . '/full-site-private/instrument-media.json')) {
+    putenv('SIAL_INSTRUMENT_MEDIA_FILE=' . dirname(__DIR__) . '/full-site-private/instrument-media.json');
+}
 require __DIR__ . '/config.example.php';
 ''')
     (destination / '.htaccess').write_text('<Files "full-site-config.php">\nRequire all denied\n</Files>\n')

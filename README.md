@@ -16,6 +16,16 @@ Set `SIAL_CATALOGUE_FILE` to an absolute JSON export path **outside the document
 
 The existing CMS and the instrument catalogue are separate stores. Both have a table called `products` with different meanings. **Never run the instrument migrations in the website CMS database.**
 
+## Knowledge base and photographs
+
+The existing Resources page links to `/knowledge-base`. The first three source-linked guides cover surgical-instrument specifications/evidence, football procurement/testing, and a Sialkot industry buyer map including leather and textiles. Search and industry filters work without JavaScript. Guides use the existing navigation, fonts and colour palette. Each article includes linked sources, preparation date, review status, related products and a corrections route.
+
+All three are **drafts**, prepared with AI assistance and awaiting a real specialist review. Drafts appear only in trusted staging and are excluded from the sitemap. Publication requires `status: published`, a real `reviewer`, and `reviewed_on` in `includes/knowledge-content.php`; technical changes must reset those fields and return the guide to draft. No author credentials, review or product certification are implied. The [credibility review](docs/credibility-review.md) identifies existing marketing claims that need evidence or correction before a public knowledge-base launch; it does not change the preserved original copy.
+
+Instrument hero images, family cards and variant galleries are ready for **owned or supplier-authorized photographs**, each mapped to its exact SKU. No source photographs are currently present. Missing variants keep the honest placeholder. Configure `SIAL_INSTRUMENT_MEDIA_FILE` to a private JSON manifest outside every web root; only approved, hash-matched, valid JPG/PNG/WebP images are returned. Private permission/source records do not reach HTML. A family illustration identifies the specific variant shown. PHP GD is required for image validation. Follow the [photography brief](docs/instrument-photography.md); only approved delivery files belong in `uploads/instruments/` because static image URLs are public. Keep originals and permission evidence private.
+
+The staging builder accepts optional `--media-manifest /private/instrument-media.json`. This copies the manifest outside `public_html`; approved delivery images must already be in `uploads/instruments/`. Always include the current manifest when building a release containing photographs.
+
 ## Run the complete website locally
 
 Requirements: PHP 8.1+ with PDO SQLite, Python 3.9+. Run from the repository root:
@@ -54,6 +64,8 @@ Do not upload this staging configuration to the production site. Back up the pre
 php tests/instrument-data-test.php
 python3 tests/contact-instruments-test.py
 python3 tests/setup-preview-test.py
+php tests/knowledge-base-test.php
+php tests/instrument-media-test.php
 python3 scripts/test_site_integration.py --baseline-url http://127.0.0.1:8879 --integrated-url http://127.0.0.1:8878
 ```
 

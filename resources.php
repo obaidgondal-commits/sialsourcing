@@ -24,6 +24,19 @@ $docs = [
   </div>
 </section>
 
+<?php require_once __DIR__ . '/includes/knowledge-base.php'; if (knowledge_available()): ?>
+<!-- knowledge-resource-start -->
+<section class="section section-white" aria-labelledby="resource-knowledge-title">
+  <div class="container">
+    <div class="section-label">Sialkot Industry Knowledge Base</div>
+    <h2 class="section-title" id="resource-knowledge-title">Understand the Product. Ask Better Questions.</h2>
+    <p class="section-desc">Explore source-linked guides to surgical instruments, sports goods and Sialkot industries, with practical questions to help you prepare your sourcing brief.</p>
+    <a href="<?= SITE_URL ?>/knowledge-base" class="btn btn-gold">Explore the Knowledge Base <?= icon('arrow-right', 16) ?></a>
+  </div>
+</section>
+<!-- knowledge-resource-end -->
+<?php endif; ?>
+
 <section class="section section-cream">
   <div class="container">
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;">

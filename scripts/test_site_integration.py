@@ -169,6 +169,12 @@ def main():
         a_status, _, a_body = get(args.baseline_url, path)
         b_status, _, b_body = get(args.integrated_url, path)
         a_html, b_html = normalize_body(a_body), normalize_body(b_body)
+        if path == '/resources':
+            # Only the explicitly added knowledge-base entry point is excluded.
+            # All original download cards, texts, CTA and navigation still match.
+            b_html = re.sub(r'<!-- knowledge-resource-start -->.*?<!-- knowledge-resource-end -->', '', b_html, flags=re.S)
+            a_html = re.sub(r'\n{3,}', '\n\n', a_html)
+            b_html = re.sub(r'\n{3,}', '\n\n', b_html)
         good = check(a_status == b_status == 200 and a_html == b_html, 'Original HTML preserved for ' + path)
         if not good and a_status == b_status == 200:
             a_lines, b_lines = a_html.splitlines(), b_html.splitlines()

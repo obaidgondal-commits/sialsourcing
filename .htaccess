@@ -56,6 +56,9 @@ RewriteRule ^products/([a-z0-9-]+)/?$ /$1 [R=301,L]
 # 5) Sitemap served dynamically from the database
 RewriteRule ^sitemap\.xml$ sitemap.php [L]
 
+# Knowledge guides use path identity; query parameters only filter the index.
+RewriteRule ^knowledge-base(?:/[a-z0-9-]+)?$ knowledge-base.php [END,QSA]
+
 # 6) Internal rewrites — the URL bar stays clean
 #    Instrument details extend the existing surgical and dental category pages.
 #    The controller reads route identity from REQUEST_URI and keeps GET filters.
@@ -71,7 +74,7 @@ RewriteRule ^blog/([a-zA-Z0-9-]+)$ blog-single.php?slug=$1 [L,QSA]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.php -f
-RewriteCond $1 !^(config|index|product-template|instrument-catalogue|blog-single|sitemap|default)$
+RewriteCond $1 !^(config|index|product-template|instrument-catalogue|knowledge-base|blog-single|sitemap|default)$
 RewriteRule ^([a-z0-9-]+)$ $1.php [L]
 </IfModule>
 

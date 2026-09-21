@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/includes/instrument-data.php';
+require_once __DIR__ . '/includes/instrument-media.php';
+require_once __DIR__ . '/includes/knowledge-base.php';
 
 function instrument_view_text(mixed $value, string $fallback = ''): string
 {
@@ -87,6 +89,9 @@ $disciplineName = instrument_view_text($families[0]['discipline'] ?? null, 'Surg
 $groupName = instrument_view_text($families[0]['group'] ?? null, 'Instrument');
 $groupUrl = $families[0]['group_url'];
 $products = $family['products'] ?? [];
+$familyPhotos = $family ? instrument_media_for_family($family) : [];
+$heroPhotoSku = array_key_first($familyPhotos);
+$heroPhoto = $heroPhotoSku !== null ? ($familyPhotos[$heroPhotoSku][0] ?? null) : null;
 $groupProductCount = array_sum(array_map(static fn (array $item): int => count($item['products'] ?? []), $families));
 $pendingCount = 0;
 foreach ($family ? [$family] : $families as $visibleFamily) {
@@ -147,7 +152,7 @@ require __DIR__ . '/includes/header.php';
       <div class="pp-meta-item"><div class="pp-meta-label">Specifications</div><div class="pp-meta-value"><?= $pendingCount ? 'Awaiting review' : 'Reviewed' ?></div></div>
     </div>
   </div>
-  <div class="pp-hero-right"><div class="pp-hero-ph"><?= icon('scissors', 190, 'pp-hero-ph-icon') ?></div><p class="instrument-photo-note">Photograph not available</p></div>
+  <div class="pp-hero-right"><?php if ($heroPhoto): ?><figure class="instrument-hero-photo"><a href="<?= SITE_URL . e($heroPhoto['path']) ?>" target="_blank" rel="noopener"><img src="<?= SITE_URL . e($heroPhoto['path']) ?>" width="<?= $heroPhoto['width'] ?>" height="<?= $heroPhoto['height'] ?>" alt="<?= e($heroPhoto['alt']) ?>"></a><figcaption>Shown: <?= e($heroPhotoSku) ?> · <?= e($heroPhoto['view']) ?><?php if ($heroPhoto['caption']): ?><br><?= e($heroPhoto['caption']) ?><?php endif; ?><?php if ($heroPhoto['credit']): ?><br><?= e($heroPhoto['credit']) ?><?php endif; ?></figcaption></figure><?php else: ?><div class="pp-hero-ph"><?= icon('scissors', 190, 'pp-hero-ph-icon') ?></div><p class="instrument-photo-note">Photograph not available</p><?php endif; ?></div>
 </section>
 
 <?php if (!$family): ?>
@@ -164,8 +169,12 @@ require __DIR__ . '/includes/header.php';
         $familySearch = implode(' ', [instrument_view_text($item['name'] ?? null), instrument_view_text($item['code'] ?? null), instrument_view_text($item['pattern'] ?? null), ...array_map('instrument_view_product_search', $item['products'])]);
         $matches = $query === '' || stripos($familySearch, $query) !== false;
         $visibleCount += (int) $matches;
+        $cardPhotos = instrument_media_for_family($item, true);
+        $cardSku = array_key_first($cardPhotos);
+        $cardPhoto = $cardSku !== null ? ($cardPhotos[$cardSku][0] ?? null) : null;
       ?>
         <article class="product-card instrument-family-card" data-instrument-item data-search="<?= e($familySearch) ?>"<?= !$matches ? ' hidden' : '' ?>>
+          <?php if ($cardPhoto): ?><figure class="instrument-card-photo"><a href="<?= SITE_URL . e($item['url']) ?>"><img src="<?= SITE_URL . e($cardPhoto['path']) ?>" width="<?= $cardPhoto['width'] ?>" height="<?= $cardPhoto['height'] ?>" alt="<?= e($cardPhoto['alt']) ?>" loading="lazy" decoding="async"></a><figcaption>Variant shown: <?= e($cardSku) ?><?php if ($cardPhoto['credit']): ?> · <?= e($cardPhoto['credit']) ?><?php endif; ?></figcaption></figure><?php endif; ?>
           <div class="instrument-card-top"><div class="product-icon"><?= icon('scissors', 23) ?></div><span class="instrument-variant-count"><?= count($item['products']) ?> variants</span></div>
           <span class="instrument-kicker"><?= e($item['code'] ?? '') ?></span><h3><a href="<?= SITE_URL . e($item['url']) ?>"><?= e($item['name']) ?></a></h3>
           <?php if (!empty($item['pattern'])): ?><p class="instrument-pattern"><?= e($item['pattern']) ?></p><?php endif; ?>
@@ -206,10 +215,11 @@ require __DIR__ . '/includes/header.php';
               if ($value !== '' && ($attributes[$code]['raw'] ?? '') !== $value) $matches = false;
           }
           $visibleCount += (int) $matches;
+          $productPhotos = $familyPhotos[$product['sku']] ?? [];
         ?>
           <tr data-instrument-item data-search="<?= e($searchText) ?>" data-attributes="<?= e(json_encode(array_map(static fn (array $attribute): string => $attribute['raw'], $attributes), JSON_THROW_ON_ERROR)) ?>"<?= !$matches ? ' hidden' : '' ?>>
             <td class="instrument-select-cell"><label class="instrument-select-target"><input type="checkbox" name="skus[]" value="<?= e($product['sku']) ?>" data-instrument-select aria-label="Select <?= e(instrument_view_text($product['description'] ?? null, $product['sku'])) ?> (<?= e($product['sku']) ?>)"></label></td>
-            <th scope="row" class="instrument-description-cell"><span class="instrument-name"><?= e(instrument_view_text($product['description'] ?? null, 'Instrument variant')) ?></span><span class="instrument-code"><?= e($product['sku']) ?></span><?php if (!empty($attributes['tooth_position'])): ?><span class="instrument-attribute-tag"><?= e($attributes['tooth_position']['value']) ?></span><?php endif; ?></th>
+            <th scope="row" class="instrument-description-cell"><span class="instrument-name"><?= e(instrument_view_text($product['description'] ?? null, 'Instrument variant')) ?></span><span class="instrument-code"><?= e($product['sku']) ?></span><?php if (!empty($attributes['tooth_position'])): ?><span class="instrument-attribute-tag"><?= e($attributes['tooth_position']['value']) ?></span><?php endif; ?><?php if ($productPhotos): ?><div class="instrument-variant-photos"><?php foreach ($productPhotos as $photo): ?><figure><a href="<?= SITE_URL . e($photo['path']) ?>" target="_blank" rel="noopener" aria-label="Open <?= e($photo['view']) ?> photograph of <?= e($product['sku']) ?>"><img src="<?= SITE_URL . e($photo['path']) ?>" width="<?= $photo['width'] ?>" height="<?= $photo['height'] ?>" alt="<?= e($photo['alt']) ?>" loading="lazy" decoding="async"></a><figcaption><?= e($photo['view']) ?><?php if ($photo['caption']): ?><br><?= e($photo['caption']) ?><?php endif; ?><?php if ($photo['credit']): ?><br><?= e($photo['credit']) ?><?php endif; ?></figcaption></figure><?php endforeach; ?></div><?php endif; ?></th>
             <td class="instrument-material-cell" data-label="Material"><?= e(instrument_view_text($product['material'] ?? null, $attributes['material']['value'] ?? 'Not specified')) ?></td>
             <td class="instrument-spec-cell"><details class="instrument-spec-details"><summary>View Specifications <span aria-hidden="true">+</span></summary><dl><?php foreach ($attributes as $attribute): ?><div><dt><?= e($attribute['label']) ?></dt><dd><?= e($attribute['value'] . ($attribute['unit'] !== '' ? ' ' . $attribute['unit'] : '')) ?></dd></div><?php endforeach; ?><?php if (!$attributes): ?><div><dt>Specifications</dt><dd>Not yet available</dd></div><?php endif; ?></dl><?php if ($preview): ?><p class="instrument-spec-review"><?= ($product['review_status'] ?? '') === 'verified' ? 'Reviewed specification' : 'Specification awaiting review' ?></p><?php endif; ?></details></td>
           </tr>
@@ -223,6 +233,10 @@ require __DIR__ . '/includes/header.php';
 </section>
 <section class="pp-specs instrument-catalogue"><div class="pp-specs-inner"><h2>Preparing Your Instrument Enquiry</h2><div class="pp-specs-grid"><div class="pp-spec-card"><div class="pp-spec-label">Instrument References</div><div class="pp-spec-value">Select the individual SialSourcing references so your request identifies the variants you need.</div></div><div class="pp-spec-card"><div class="pp-spec-label">Quantities &amp; Packaging</div><div class="pp-spec-value">Include quantities per reference and any packaging or labelling requirements.</div></div><div class="pp-spec-card"><div class="pp-spec-label">Destination &amp; Requirements</div><div class="pp-spec-value">Tell us your destination and required documentation so these can be checked for your enquiry.</div></div></div></div></section>
 <section class="section section-cream instrument-catalogue"><div class="container instrument-back-link"><a class="product-link" href="<?= SITE_URL . e($groupUrl) ?>">Browse All <?= e($groupName) ?> Families <?= icon('arrow-right', 16) ?></a><a class="product-link" href="<?= SITE_URL ?>/<?= e($disciplinePath) ?>">Back to <?= e($disciplineName) ?> <?= icon('arrow-right', 16) ?></a></div></section>
+<?php endif; ?>
+
+<?php if (knowledge_available()): ?>
+<section class="section section-white instrument-catalogue"><div class="container"><div class="section-label">From the Knowledge Base</div><h2 class="section-title">Prepare a Clear Instrument Specification</h2><p class="section-desc">Explore the information to include in your brief, the evidence to request and the questions to resolve before ordering.</p><a class="product-link" href="<?= SITE_URL ?>/knowledge-base">Explore Our Sourcing Guides <?= icon('arrow-right', 16) ?></a></div></section>
 <?php endif; ?>
 
 <section class="pp-cta instrument-catalogue"><h2>Ready to Source Your <em style="color:var(--gold);font-style:normal;">Instruments</em>?</h2><p>Tell us which instruments you need, your quantities and your requirements. We will review the details with you.</p><div class="pp-cta-actions"><a class="btn-primary" href="<?= $family ? '#instrument-variants' : SITE_URL . '/contact?product=surgical-instruments' ?>"><?= $family ? 'Select Variants for Your Enquiry' : 'Get a Free Sourcing Plan' ?></a><a class="btn-outline-light" href="<?= SITE_URL ?>/lab-qc">Our QC Process</a></div></section>
