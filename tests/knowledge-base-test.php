@@ -8,6 +8,9 @@ function kb_check(bool $value, string $label): void {
     $checks++;
 }
 putenv('SIAL_STAGING=0');
+kb_check(knowledge_is_published(['status' => 'published', 'reviewer' => 'Test reviewer', 'reviewed_on' => '2026-09-21']), 'Valid publication metadata');
+kb_check(!knowledge_is_published(['status' => 'published', 'reviewer' => 'Test reviewer', 'reviewed_on' => '2026-02-30']), 'Impossible review date rejected');
+kb_check(!knowledge_is_published(['status' => 'published', 'reviewer' => '', 'reviewed_on' => '2026-09-21']), 'Missing reviewer rejected');
 kb_check(knowledge_articles() === [], 'Drafts excluded from production');
 kb_check(knowledge_articles(true) === [], 'Caller cannot override trusted staging configuration');
 kb_check(!knowledge_available(), 'No draft links in production resources');

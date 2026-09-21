@@ -2,14 +2,21 @@
 declare(strict_types=1);
 require_once __DIR__ . '/instrument-data.php';
 
+function knowledge_is_published(array $article): bool
+{
+    $date = $article['reviewed_on'] ?? '';
+    $parsed = is_string($date) ? DateTimeImmutable::createFromFormat('!Y-m-d', $date) : false;
+    return ($article['status'] ?? '') === 'published'
+        && is_string($article['reviewer'] ?? null) && trim($article['reviewer']) !== ''
+        && $parsed !== false && $parsed->format('Y-m-d') === $date;
+}
+
 function knowledge_articles(bool $includeDrafts = false): array
 {
     $articles = require __DIR__ . '/knowledge-content.php';
     return array_filter($articles, static function (array $article) use ($includeDrafts): bool {
         if ($includeDrafts && instrument_is_staging()) return true;
-        return ($article['status'] ?? '') === 'published'
-            && trim($article['reviewer'] ?? '') !== ''
-            && preg_match('/^\d{4}-\d{2}-\d{2}$/D', $article['reviewed_on'] ?? '') === 1;
+        return knowledge_is_published($article);
     });
 }
 
