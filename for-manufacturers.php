@@ -32,9 +32,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ->execute([$company,$contact,$email,$phone,$city,$cats,$certs,$site,$msg]);
         $to       = setting('contact_email', 'info@sialsourcing.com');
         $safeMail = str_replace(["\r", "\n"], '', $email);
-        @mail($to, 'New Manufacturer Application: ' . substr($company, 0, 60),
+        if (!defined('SIAL_STAGING') || !SIAL_STAGING) {
+            @mail($to, 'New Manufacturer Application: ' . substr($company, 0, 60),
               "Company: $company\nContact: $contact <$safeMail>\nPhone: $phone\nCity: $city\nCategories: $cats\nCertifications: $certs\nWebsite: $site\n\n$msg",
               "From: SialSourcing Website <no-reply@sialsourcing.com>\r\nReply-To: $safeMail");
+        }
         $success = true;
     }
 }

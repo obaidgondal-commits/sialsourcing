@@ -1,0 +1,30 @@
+name: Website preservation and instrument checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure PHP and image support
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, gd
+          coverage: none
+      - name: Check PHP syntax
+        run: find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
+      - name: Validate publication and selected references
+        run: php tests/instrument-data-test.php
+      - name: Verify existing contact form integration
+        run: python3 tests/contact-instruments-test.py
+      - name: Verify full website preview restore
+        run: python3 tests/setup-preview-test.py
+      - name: Verify draft knowledge guides stay private
+        run: php tests/knowledge-base-test.php
+      - name: Verify approved photo mapping and private metadata
+        run: php tests/instrument-media-test.php
